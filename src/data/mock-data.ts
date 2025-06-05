@@ -1,0 +1,153 @@
+import type { Lead, DripCampaign, ScoringRule, EmailTemplate, AnalyticsData } from '@/types';
+
+export const mockLeads: Lead[] = [
+  {
+    id: '1',
+    name: 'Alice Wonderland',
+    company: 'Wonderland Inc.',
+    email: 'alice@wonderland.com',
+    phone: '555-0101',
+    industry: 'Technology',
+    jobTitle: 'CEO',
+    websiteEngagement: 'Visited pricing page, downloaded whitepaper',
+    score: 95,
+    priority: 'High',
+    status: 'Qualified',
+    lastInteraction: '2024-07-20 - Email Opened',
+    rationale: 'High engagement, CEO title, target industry.',
+    dataValidationStatus: 'Valid',
+  },
+  {
+    id: '2',
+    name: 'Bob The Builder',
+    company: 'Construction Co.',
+    email: 'bob@construction.com',
+    phone: '555-0102',
+    industry: 'Construction',
+    jobTitle: 'Project Manager',
+    websiteEngagement: 'Visited homepage',
+    score: 60,
+    priority: 'Medium',
+    status: 'Nurturing',
+    lastInteraction: '2024-07-18 - Added to Campaign "Intro"',
+    rationale: 'Relevant industry, but low engagement.',
+    dataValidationStatus: 'Valid',
+  },
+  {
+    id: '3',
+    name: 'Charlie Brown',
+    company: 'Peanuts LLC',
+    email: 'charlie@peanuts.com',
+    industry: 'Entertainment',
+    jobTitle: 'Artist',
+    websiteEngagement: 'No recent activity',
+    score: 30,
+    priority: 'Low',
+    status: 'New',
+    lastInteraction: '2024-07-15 - Lead Captured',
+    rationale: 'Low fit, no engagement.',
+    dataValidationStatus: 'Unverified',
+  },
+  {
+    id: '4',
+    name: 'Diana Prince',
+    company: 'Themyscira Corp',
+    email: 'diana@themyscira.com',
+    industry: 'Non-profit',
+    jobTitle: 'Director',
+    websiteEngagement: 'Attended webinar, visited solutions page',
+    score: 85,
+    priority: 'High',
+    status: 'Contacted',
+    lastInteraction: '2024-07-21 - Sales call scheduled',
+    rationale: 'High engagement, director title.',
+    dataValidationStatus: 'Valid',
+  },
+  {
+    id: '5',
+    name: 'Edward Scissorhands',
+    company: 'Artistic Designs',
+    email: 'edward@art.com',
+    industry: 'Arts & Crafts',
+    jobTitle: 'Freelancer',
+    websiteEngagement: 'Commented on blog post',
+    score: 45,
+    priority: 'Low',
+    status: 'New',
+    lastInteraction: '2024-07-19 - Lead Captured',
+    rationale: 'Some engagement but not target profile.',
+    dataValidationStatus: 'Invalid',
+  }
+];
+
+export const mockScoringRules: ScoringRule[] = [
+  { id: 'rule1', attribute: 'jobTitle', condition: 'contains', value: 'CEO', weight: 20 },
+  { id: 'rule2', attribute: 'jobTitle', condition: 'contains', value: 'Director', weight: 15 },
+  { id: 'rule3', attribute: 'industry', condition: 'equals', value: 'Technology', weight: 10 },
+  { id: 'rule4', attribute: 'websiteEngagement', condition: 'isPresent', value: 'downloaded whitepaper', weight: 15 },
+  { id: 'rule5', attribute: 'companySize', condition: 'greaterThan', value: 100, weight: 10 },
+];
+
+export const mockEmailTemplates: EmailTemplate[] = [
+  { id: 'tpl1', name: 'Welcome Email', subject: 'Welcome to LeadSpring AI!', body: '<p>Hi {{leadName}}, welcome!</p>' },
+  { id: 'tpl2', name: 'Feature Highlight', subject: 'Discover {{featureName}}', body: '<p>Check out our {{featureName}}.</p>' },
+  { id: 'tpl3', name: 'Case Study', subject: 'How {{companyName}} achieved X', body: '<p>Read our latest case study.</p>' },
+];
+
+export const mockDripCampaigns: DripCampaign[] = [
+  {
+    id: 'camp1',
+    name: 'New Lead Welcome Sequence',
+    status: 'Active',
+    triggerType: 'formSubmission',
+    triggerValue: 'contact-form',
+    steps: [
+      { id: 's1', emailTemplateId: 'tpl1', delayDays: 0, order: 1 },
+      { id: 's2', emailTemplateId: 'tpl2', delayDays: 3, order: 2 },
+      { id: 's3', emailTemplateId: 'tpl3', delayDays: 5, order: 3 },
+    ],
+    totalEmails: 3,
+    enrollmentCount: 150,
+    openRate: 65,
+    clickThroughRate: 15,
+  },
+  {
+    id: 'camp2',
+    name: 'High Score Nurturing',
+    status: 'Paused',
+    triggerType: 'scoreThreshold',
+    triggerValue: 80,
+    steps: [
+      { id: 's1', emailTemplateId: 'tpl2', delayDays: 1, order: 1 },
+      { id: 's2', emailTemplateId: 'tpl3', delayDays: 7, order: 2 },
+    ],
+    totalEmails: 2,
+    enrollmentCount: 45,
+    openRate: 75,
+    clickThroughRate: 25,
+  },
+];
+
+export const mockAnalyticsData: AnalyticsData = {
+  leadsGenerated: [
+    { date: '2024-07-01', count: 10 },
+    { date: '2024-07-02', count: 15 },
+    { date: '2024-07-03', count: 12 },
+    { date: '2024-07-04', count: 18 },
+    { date: '2024-07-05', count: 20 },
+    { date: '2024-07-06', count: 17 },
+    { date: '2024-07-07', count: 22 },
+  ].map(d => ({date: d.date, count: d.count + Math.floor(Math.random() * 5) })),
+  leadsQualified: { qualified: 75, unqualified: 125 },
+  conversionRate: [
+    { stage: 'New', count: 200 },
+    { stage: 'Contacted', count: 150 },
+    { stage: 'Qualified', count: 75 },
+    { stage: 'Converted', count: 25 },
+  ],
+  emailCampaignPerformance: mockDripCampaigns.map(c => ({
+    campaignName: c.name,
+    openRate: c.openRate || 0,
+    ctr: c.clickThroughRate || 0,
+  })),
+};
