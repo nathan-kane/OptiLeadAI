@@ -9,7 +9,7 @@ export default function LandingPage() {
       <header className="px-4 lg:px-6 h-16 flex items-center border-b">
         <Link href="#" className="flex items-center justify-center" prefetch={false}>
           <Logo />
-          <span className="sr-only">LeadSpring AI</span>
+          <span className="sr-only">OptiLead</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
@@ -45,10 +45,10 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                    Transform Your Leads into Revenue with AI
+                    Transform Your Leads into Revenue with OptiLead
                   </h1>
                   <p className="max-w-[600px] text-foreground/80 md:text-xl">
-                    LeadSpring AI empowers B2B marketers and small businesses to generate higher quality leads, automate nurturing, and close more deals.
+                    OptiLead AI empowers B2B marketers and small businesses to generate higher quality leads, automate nurturing, and close more deals.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -145,7 +145,7 @@ export default function LandingPage() {
         </section>
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-foreground/70">&copy; {new Date().getFullYear()} LeadSpring AI. All rights reserved.</p>
+        <p className="text-xs text-foreground/70">&copy; {new Date().getFullYear()} OptiLead. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link href="#" className="text-xs hover:underline underline-offset-4 text-foreground/70" prefetch={false}>
             Terms of Service
