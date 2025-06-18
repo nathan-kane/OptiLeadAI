@@ -56,7 +56,7 @@ export default function SignupPage() {
               setSuccessMessage('Registration successful! Please check your email for a verification link.');
             } catch (error: any) {
               setErrorMessage("Error signing up: " + error.message);
-              console.error("Error signing up:", error.message);
+              console.error("Signup error (check Firebase authorized domains):", error.message);
             }
           }}>
           <div className="space-y-2 mb-4">
