@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { applyActionCode, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/utils"; 
+import { Button } from "@/components/ui/button";
 
 const VerifyEmailPage: React.FC = () => {
   const router = useRouter();
