@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed from isLoading
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthCheckLoading, setIsAuthCheckLoading] = useState(true); 
 
   useEffect(() => {
@@ -34,14 +34,14 @@ export default function LoginPage() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("LoginPage: onAuthStateChanged FIRED. User object:", user ? user.uid : null);
       if (user) {
-        console.log("LoginPage: onAuthStateChanged detected USER (uid:", user.uid, "), attempting redirect to /.");
-        router.replace('/');
-        console.log("LoginPage: onAuthStateChanged - router.replace('/') CALLED.");
-        // Component might unmount, so setting isAuthCheckLoading to false here might not always run or be relevant.
+        console.log("LoginPage: onAuthStateChanged detected USER (uid:", user.uid, "), attempting redirect to /dashboard.");
+        setIsAuthCheckLoading(false); // User found, no longer checking
+        router.replace('/dashboard'); // Redirect to dashboard
+        console.log("LoginPage: onAuthStateChanged - router.replace('/dashboard') CALLED.");
       } else {
         console.log("LoginPage: onAuthStateChanged detected NO USER. Allowing login form.");
         setIsAuthCheckLoading(false);
-        console.log("LoginPage: onAuthStateChanged - set isAuthCheckLoading to false.");
+        console.log("LoginPage: onAuthStateChanged - set isAuthCheckLoading to false, login form will be shown.");
       }
     });
 
@@ -74,10 +74,10 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log("LoginPage: Firebase signInWithEmailAndPassword successful. User:", userCredential.user.uid);
       // Explicitly redirect after successful sign-in
-      console.log("LoginPage: handleLogin - Attempting explicit redirect to /");
-      router.replace('/');
-      console.log("LoginPage: handleLogin - router.replace('/') CALLED.");
-      // setIsSubmitting will be set to false in finally, but navigation might occur before that.
+      console.log("LoginPage: handleLogin - Attempting explicit redirect to /dashboard");
+      // onAuthStateChanged will also pick this up, but direct navigation can be faster for UI.
+      router.replace('/dashboard');
+      console.log("LoginPage: handleLogin - router.replace('/dashboard') CALLED.");
     } catch (error: any) {
       let friendlyMessage = "Failed to log in. Please check your credentials.";
       if (error.code) {
@@ -169,7 +169,7 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isSubmitting || isAuthCheckLoading}>
+            <Button type="submit" className="w-full" disabled={isSubmitting || (isAuthCheckLoading && !errorMessage) }>
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
             <div className="text-center text-sm text-muted-foreground">

@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users } from 'lucide-react';
 
@@ -10,7 +11,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
-    href: '/',
+    href: '/dashboard', // Changed from '/'
     label: 'Dashboard',
     icon: LayoutDashboard,
     group: 'Overview',
@@ -47,3 +48,4 @@ export const navItems: NavItem[] = [
   //   group: 'Configuration',
   // },
 ];
+

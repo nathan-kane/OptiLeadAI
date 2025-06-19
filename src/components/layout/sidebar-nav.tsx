@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -36,7 +37,7 @@ export function SidebarNav() {
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader>
-        <Link href="/" className="flex items-center gap-2 p-2">
+        <Link href="/dashboard" className="flex items-center gap-2 p-2"> {/* Changed from / */}
           <Logo className="hidden group-data-[state=expanded]:block" />
           <span className="sr-only group-data-[state=collapsed]:not-sr-only">LS</span>
         </Link>
@@ -50,7 +51,7 @@ export function SidebarNav() {
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href} legacyBehavior passHref>
                     <SidebarMenuButton
-                      isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
+                      isActive={pathname === item.href || (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))} // Adjusted isActive logic
                       tooltip={{ children: item.label }}
                     >
                       <item.icon />

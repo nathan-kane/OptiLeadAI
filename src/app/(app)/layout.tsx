@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -16,36 +16,32 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isAppLoading, setIsAppLoading] = useState(true); // Renamed from isLoading
+  const pathname = usePathname(); // Get current pathname
+  const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
-    console.log("AppLayout: Mount & Auth Check Effect Running. Initial isAppLoading:", isAppLoading);
+    console.log(`AppLayout: Mount & Auth Check Effect Running for path: ${pathname}. Initial isAppLoading: ${isAppLoading}`);
     if (!auth) {
       console.error("AppLayout: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
       setIsAppLoading(false);
       console.log("AppLayout: Auth init error, setting isAppLoading to false.");
-      // Consider redirecting to an error page or login if auth fundamentally fails
-      router.replace('/login'); // Fallback redirect
+      router.replace('/login'); 
       console.log("AppLayout: Auth init error - router.replace('/login') CALLED.");
       return;
     }
     console.log("AppLayout: Auth object IS available for onAuthStateChanged setup.");
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // Note: isAppLoading inside this callback might be stale if it's not in deps,
-      // but decisions should be based on 'user' object.
-      console.log("AppLayout: onAuthStateChanged FIRED. User object:", user ? user.uid : null);
+      console.log(`AppLayout: onAuthStateChanged FIRED for path: ${pathname}. User object: ${user ? user.uid : null}. Current isAppLoading: ${isAppLoading}`);
       if (user) {
-        console.log("AppLayout: User IS authenticated (uid:", user.uid, "). Allowing app content.");
+        console.log(`AppLayout: User IS authenticated (uid: ${user.uid}). Path: ${pathname}. Allowing app content.`);
         setIsAppLoading(false);
         console.log("AppLayout: User found, setting isAppLoading to false.");
       } else {
-        console.log("AppLayout: User is NOT authenticated. Attempting redirect to /login.");
+        console.log(`AppLayout: User is NOT authenticated for path: ${pathname}. Attempting redirect to /login.`);
+        setIsAppLoading(false); // Stop loading as we are redirecting
         router.replace('/login');
-        console.log("AppLayout: router.replace('/login') CALLED.");
-        // If redirecting, isAppLoading might ideally be true until LoginPage takes over,
-        // or set to false here if LoginPage isn't expected to show its own loader.
-        // For now, let LoginPage handle its own loading state.
+        console.log("AppLayout: router.replace('/login') CALLED because no user.");
       }
     });
 
@@ -53,10 +49,10 @@ export default function AppLayout({
       console.log("AppLayout: Unmount & Auth Check Effect Cleanup.");
       unsubscribe();
     };
-  }, [router]); // Dependency array changed
+  }, [router, pathname]); // Added pathname to dependency array
 
   if (isAppLoading) {
-    console.log("AppLayout: isAppLoading is TRUE. Rendering loading spinner.");
+    console.log(`AppLayout: isAppLoading is TRUE for path: ${pathname}. Rendering loading spinner.`);
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -67,7 +63,7 @@ export default function AppLayout({
     );
   }
 
-  console.log("AppLayout: isAppLoading is FALSE. Rendering app shell.");
+  console.log(`AppLayout: isAppLoading is FALSE for path: ${pathname}. Rendering app shell.`);
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full">
