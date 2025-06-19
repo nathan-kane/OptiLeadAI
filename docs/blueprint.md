@@ -1,4 +1,4 @@
-# **App Name**: LeadSpring AI
+# **App Name**: OptiLead
 
 ## Core Features:
 

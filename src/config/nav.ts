@@ -1,6 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User } from 'lucide-react';
 
 export interface NavItem {
   href: string;
@@ -47,5 +47,11 @@ export const navItems: NavItem[] = [
   //   icon: Settings,
   //   group: 'Configuration',
   // },
+  {
+    href: '/profile',
+    label: 'Profile',
+    icon: User,
+    group: 'Configuration',
+  },
 ];
 

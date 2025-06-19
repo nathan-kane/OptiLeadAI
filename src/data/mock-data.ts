@@ -89,7 +89,7 @@ export const mockScoringRules: ScoringRule[] = [
 ];
 
 export const mockEmailTemplates: EmailTemplate[] = [
-  { id: 'tpl1', name: 'Welcome Email', subject: 'Welcome to LeadSpring AI!', body: '<p>Hi {{leadName}}, welcome!</p>' },
+  { id: 'tpl1', name: 'Welcome Email', subject: 'Welcome to OptiLead!', body: '<p>Hi {{leadName}}, welcome!</p>' },
   { id: 'tpl2', name: 'Feature Highlight', subject: 'Discover {{featureName}}', body: '<p>Check out our {{featureName}}.</p>' },
   { id: 'tpl3', name: 'Case Study', subject: 'How {{companyName}} achieved X', body: '<p>Read our latest case study.</p>' },
 ];

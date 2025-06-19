@@ -29,7 +29,7 @@ export default function SignupPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Join LeadSpring AI and start supercharging your lead generation.</CardDescription>
+          <CardDescription>Join OptiLead and start supercharging your lead generation.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={async (e) => {

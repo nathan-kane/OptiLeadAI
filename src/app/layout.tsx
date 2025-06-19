@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'LeadSpring AI',
+  title: 'OptiLead',
   description: 'AI-Enhanced Lead Generation & Nurturing Platform',
 };
 

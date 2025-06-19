@@ -7,7 +7,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 200 50"
       width="150"
       height="37.5"
-      aria-label="LeadSpring AI Logo"
+      aria-label="OptiLead Logo"
       {...props}
     >
       <defs>
@@ -32,7 +32,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
         fontWeight="bold"
         fill="hsl(var(--foreground))"
       >
-        LeadSpring AI
+        OptiLead
       </text>
     </svg>
   );

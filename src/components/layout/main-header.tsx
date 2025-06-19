@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Bell, UserCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { navItems } from '@/config/nav';
+import Link from 'next/link';
 
 export function MainHeader() {
   const pathname = usePathname();
@@ -22,10 +23,12 @@ export function MainHeader() {
           <Bell className="h-5 w-5" />
           <span className="sr-only">Notifications</span>
         </Button>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <UserCircle className="h-6 w-6" />
-          <span className="sr-only">User Profile</span>
-        </Button>
+        <Link href="/profile">
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <UserCircle className="h-6 w-6" />
+            <span className="sr-only">User Profile</span>
+          </Button>
+        </Link>
       </div>
     </header>
   );
