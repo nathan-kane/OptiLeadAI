@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -18,17 +19,32 @@ export default function AppLayout({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("AppLayout: Mount & Auth Check Effect Running.");
+    if (!auth) {
+      console.error("AppLayout: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
+      // Consider redirecting to an error page or showing a global error.
+      // For now, this might lead to a loop if router.replace('/login') is called below.
+      // To prevent potential loops, we might want to set isLoading to false and show an error UI.
+      // However, the primary issue is likely auth initialization.
+      return; 
+    }
+    console.log("AppLayout: Auth object IS available for onAuthStateChanged setup.");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("AppLayout: onAuthStateChanged FIRED. User object:", user);
       if (user) {
-        console.log("AppLayout: User is authenticated.");
+        console.log("AppLayout: User IS authenticated (uid:", user.uid, "). Allowing app content.");
         setIsLoading(false);
       } else {
-        console.log("AppLayout: User not authenticated, redirecting to /login.");
-        router.replace('/login'); // Use replace to avoid login page in history
+        console.log("AppLayout: User is NOT authenticated. Attempting redirect to /login.");
+        router.replace('/login'); 
+        console.log("AppLayout: router.replace('/login') CALLED.");
       }
     });
 
-    return () => unsubscribe(); // Cleanup on unmount
+    return () => {
+      console.log("AppLayout: Unmount & Auth Check Effect Cleanup.");
+      unsubscribe(); 
+    }
   }, [router]);
 
   if (isLoading) {

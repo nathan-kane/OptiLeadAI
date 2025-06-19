@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -20,37 +21,51 @@ export default function LoginPage() {
   const [isAuthCheckLoading, setIsAuthCheckLoading] = useState(true); // For initial auth check
 
   useEffect(() => {
+    console.log("LoginPage: Mount & Initial Auth Check Effect Running.");
+    if (!auth) {
+      console.error("LoginPage: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
+      setIsAuthCheckLoading(false);
+      setErrorMessage("Authentication service failed to load. Check Firebase configuration and initialization.");
+      return;
+    }
+    console.log("LoginPage: Auth object IS available for onAuthStateChanged setup.");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("LoginPage: onAuthStateChanged FIRED. User object:", user);
       if (user) {
-        console.log("LoginPage: onAuthStateChanged - User is signed in, redirecting to /");
-        router.replace('/'); // Use replace to avoid login page in history if already logged in
+        console.log("LoginPage: User IS authenticated (uid:", user.uid, "), attempting redirect to /");
+        router.replace('/');
+        console.log("LoginPage: router.replace('/') CALLED.");
       } else {
-        console.log("LoginPage: onAuthStateChanged - User is not signed in.");
-        setIsAuthCheckLoading(false); // Allow rendering login form
+        console.log("LoginPage: User is NOT authenticated. Allowing login form.");
+        setIsAuthCheckLoading(false); 
       }
     });
-    return () => unsubscribe();
+    return () => {
+      console.log("LoginPage: Unmount & Initial Auth Check Effect Cleanup.");
+      unsubscribe();
+    }
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Login attempt initiated for:", email);
+    e.preventDefault(); // Ensure this is the first thing
+    console.log("LoginPage: handleLogin CALLED. Email:", email, "Password entered (length):", password.length);
     setErrorMessage(null);
     setIsLoading(true);
 
+    console.log("LoginPage: NEXT_PUBLIC_FIREBASE_API_KEY present in handleLogin:", !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+    console.log("LoginPage: Auth object in handleLogin:", auth);
+
     if (!auth) {
-      console.error("Firebase auth object is not available. Initialization might have failed.");
+      console.error("LoginPage: Firebase auth object is not available in handleLogin. Initialization might have failed.");
       setErrorMessage("Login service is temporarily unavailable. Please try again later.");
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log("Attempting Firebase sign-in...");
-      // signInWithEmailAndPassword will trigger onAuthStateChanged if successful
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("Firebase sign-in attempt successful (onAuthStateChanged will handle redirect).");
-      // No direct router.push here, onAuthStateChanged will handle it.
+      console.log("LoginPage: Attempting Firebase signInWithEmailAndPassword...");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("LoginPage: Firebase signInWithEmailAndPassword successful. UserCredential (onAuthStateChanged should handle redirect):", userCredential?.user?.uid);
     } catch (error: any) {
       let friendlyMessage = "Failed to log in. Please check your credentials.";
       if (error.code) {
@@ -73,15 +88,16 @@ export default function LoginPage() {
             friendlyMessage = `Login failed: ${error.message || 'An unexpected error occurred.'}`;
         }
       }
-      console.error("Login error code:", error.code, "Message:", error.message);
+      console.error("LoginPage: Full login error object:", error);
+      console.error("LoginPage: Login error code:", error.code, "Message:", error.message);
       setErrorMessage(friendlyMessage);
     } finally {
       setIsLoading(false);
-      console.log("Login attempt finished.");
+      console.log("LoginPage: handleLogin finished.");
     }
   };
 
-  if (isAuthCheckLoading) {
+  if (isAuthCheckLoading && !errorMessage) {
      return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex flex-col items-center gap-4">
@@ -139,7 +155,7 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading || isAuthCheckLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || (isAuthCheckLoading && !errorMessage) }>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
