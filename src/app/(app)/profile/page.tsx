@@ -2,9 +2,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { getAuth, onAuthStateChanged, type User } from "firebase/auth"; // Added User type
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { saveProfile } from "./actions";
+import { app } from "@/lib/firebase/firebase"; // Import the Firebase app instance
+
+const auth = getAuth(app); // Initialize auth using the app instance
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -35,7 +39,8 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const defaultValues: Partial<ProfileFormValues> = {
+// Default values should be strings for controlled components
+const defaultValues: ProfileFormValues = {
   name: "",
   email: "",
   jobTitle: "",
@@ -45,18 +50,50 @@ const defaultValues: Partial<ProfileFormValues> = {
 
 export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
     mode: "onChange",
   });
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        // Optionally pre-fill form if data exists, or ensure email is current user's email
+        form.reset({
+          name: user.displayName || "", // Or fetch from Firestore if profile exists
+          email: user.email || "", // Auth email, user can change if desired in form
+          jobTitle: "", // Fetch from Firestore if profile exists
+          company: "", // Fetch from Firestore if profile exists
+          bio: "", // Fetch from Firestore if profile exists
+        });
+      } else {
+        setCurrentUser(null);
+        // Handle user not being authenticated if necessary, though AppLayout should cover this
+      }
+    });
+    return () => unsubscribe();
+  }, [form]);
+
+
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
-    console.log(data);
+    if (!currentUser) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to save your profile.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await saveProfile(data);
+      await saveProfile(currentUser.uid, data);
       toast({
         title: "Profile saved successfully!",
       });
@@ -65,7 +102,7 @@ export default function ProfilePage() {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         title: "Failed to save profile.",
-        description: errorMessage, // Display the detailed error message
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -149,7 +186,7 @@ export default function ProfilePage() {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || !currentUser}>
             Save Profile
           </Button>
         </form>
