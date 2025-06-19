@@ -29,7 +29,7 @@ const profileFormSchema = z.object({
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
-  }).readonly(), // Email should ideally be read-only if sourced from auth
+  }).readonly(),
   jobTitle: z.string().optional(),
   company: z.string().optional(),
   bio: z.string().max(200, { message: "Bio must be 200 characters or less." }).optional(),
@@ -57,29 +57,28 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
+    console.log("[ProfilePage] Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser(user);
-        console.log("[ProfilePage] Current user set. UID:", user.uid, "Email:", user.email);
-        // Pre-fill form with user's display name and email from auth
-        // Other fields (jobTitle, company, bio) would ideally be fetched from Firestore if a profile already exists.
-        // For now, we'll initialize them based on defaultValues or previously entered data.
+        console.log("[ProfilePage] User authenticated. UID:", user.uid, "Email:", user.email);
         form.reset({
           name: user.displayName || defaultValues.name,
-          email: user.email || defaultValues.email, // Make sure email is populated
+          email: user.email || defaultValues.email,
           jobTitle: form.getValues().jobTitle || defaultValues.jobTitle,
           company: form.getValues().company || defaultValues.company,
           bio: form.getValues().bio || defaultValues.bio,
         });
       } else {
         setCurrentUser(null);
-        console.log("[ProfilePage] No current user.");
-        // AppLayout should handle redirecting to login if no user
+        console.log("[ProfilePage] No current user / User logged out.");
       }
     });
-    return () => unsubscribe();
-  }, [form]);
-
+    return () => {
+      console.log("[ProfilePage] Cleaning up onAuthStateChanged listener.");
+      unsubscribe();
+    };
+  }, []); // Dependency array changed to empty for stable listener setup
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
@@ -89,6 +88,7 @@ export default function ProfilePage() {
         description: "You must be logged in with a valid user ID to save your profile.",
         variant: "destructive",
       });
+      console.error("[ProfilePage] onSubmit: currentUser or currentUser.uid is null/undefined. UID:", currentUser?.uid);
       setIsLoading(false);
       return;
     }
@@ -105,7 +105,7 @@ export default function ProfilePage() {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         title: "Failed to save profile.",
-        description: errorMessage,
+        description: errorMessage, // This will now show the "Missing or insufficient permissions"
         variant: "destructive",
       });
     }
@@ -184,6 +184,7 @@ export default function ProfilePage() {
                     className="resize-none"
                     {...field}
                     value={field.value ?? ""}
+                    maxLength={200}
                   />
                 </FormControl>
                 <FormMessage />
@@ -198,3 +199,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
