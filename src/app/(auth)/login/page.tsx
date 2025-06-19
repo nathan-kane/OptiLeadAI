@@ -10,7 +10,7 @@ import { Logo } from "@/components/icons/logo";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/utils"; 
+import { auth } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,36 +21,42 @@ export default function LoginPage() {
   const [isAuthCheckLoading, setIsAuthCheckLoading] = useState(true); // For initial auth check
 
   useEffect(() => {
-    console.log("LoginPage: Mount & Initial Auth Check Effect Running.");
+    console.log("LoginPage: Mount & Initial Auth Check Effect Running. Current isAuthCheckLoading:", isAuthCheckLoading);
     if (!auth) {
       console.error("LoginPage: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
-      setIsAuthCheckLoading(false);
       setErrorMessage("Authentication service failed to load. Check Firebase configuration and initialization.");
+      setIsAuthCheckLoading(false); // Stop loading on critical auth init error
+      console.log("LoginPage: Auth init error, setting isAuthCheckLoading to false.");
       return;
     }
     console.log("LoginPage: Auth object IS available for onAuthStateChanged setup.");
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("LoginPage: onAuthStateChanged FIRED. User object:", user);
+      console.log("LoginPage: onAuthStateChanged FIRED. User object:", user ? user.uid : null);
       if (user) {
-        console.log("LoginPage: User IS authenticated (uid:", user.uid, "), attempting redirect to /");
+        console.log("LoginPage: User IS authenticated (uid:", user.uid, "), attempting redirect to /.");
         router.replace('/');
-        console.log("LoginPage: router.replace('/') CALLED.");
+        console.log("LoginPage: router.replace('/') CALLED. isAuthCheckLoading state will remain true as component might unmount.");
+        // No need to set isAuthCheckLoading to false here, as we are navigating away.
       } else {
         console.log("LoginPage: User is NOT authenticated. Allowing login form.");
-        setIsAuthCheckLoading(false); 
+        setIsAuthCheckLoading(false);
+        console.log("LoginPage: set isAuthCheckLoading to false.");
       }
     });
+
     return () => {
       console.log("LoginPage: Unmount & Initial Auth Check Effect Cleanup.");
       unsubscribe();
-    }
-  }, [router]);
+    };
+  }, [router]); // router is stable, effect runs once on mount
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Ensure this is the first thing
+    e.preventDefault(); // Crucial: Prevent default form submission
     console.log("LoginPage: handleLogin CALLED. Email:", email, "Password entered (length):", password.length);
     setErrorMessage(null);
     setIsLoading(true);
+    console.log("LoginPage: setIsLoading to true.");
 
     console.log("LoginPage: NEXT_PUBLIC_FIREBASE_API_KEY present in handleLogin:", !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
     console.log("LoginPage: Auth object in handleLogin:", auth);
@@ -59,13 +65,17 @@ export default function LoginPage() {
       console.error("LoginPage: Firebase auth object is not available in handleLogin. Initialization might have failed.");
       setErrorMessage("Login service is temporarily unavailable. Please try again later.");
       setIsLoading(false);
+      console.log("LoginPage: Auth object missing in handleLogin, setIsLoading to false.");
       return;
     }
 
     try {
       console.log("LoginPage: Attempting Firebase signInWithEmailAndPassword...");
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("LoginPage: Firebase signInWithEmailAndPassword successful. UserCredential (onAuthStateChanged should handle redirect):", userCredential?.user?.uid);
+      await signInWithEmailAndPassword(auth, email, password);
+      // If signInWithEmailAndPassword is successful, the onAuthStateChanged listener
+      // in the useEffect hook will detect the new user state and trigger router.replace('/').
+      // No direct navigation call here.
+      console.log("LoginPage: Firebase signInWithEmailAndPassword call completed. Waiting for onAuthStateChanged to handle redirect.");
     } catch (error: any) {
       let friendlyMessage = "Failed to log in. Please check your credentials.";
       if (error.code) {
@@ -85,7 +95,7 @@ export default function LoginPage() {
             friendlyMessage = "Network error. Please check your connection and try again.";
             break;
           default:
-            friendlyMessage = `Login failed: ${error.message || 'An unexpected error occurred.'}`;
+            friendlyMessage = `Login failed (Code: ${error.code}): ${error.message || 'An unexpected error occurred.'}`;
         }
       }
       console.error("LoginPage: Full login error object:", error);
@@ -93,21 +103,23 @@ export default function LoginPage() {
       setErrorMessage(friendlyMessage);
     } finally {
       setIsLoading(false);
+      console.log("LoginPage: setIsLoading to false in finally block.");
       console.log("LoginPage: handleLogin finished.");
     }
   };
 
   if (isAuthCheckLoading && !errorMessage) {
-     return (
+    console.log("LoginPage: Rendering loading spinner because isAuthCheckLoading is true AND no errorMessage.");
+    return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex flex-col items-center gap-4">
-            <Logo />
-            <p className="text-muted-foreground">Checking authentication status...</p>
+          <Logo />
+          <p className="text-muted-foreground">Checking authentication status...</p>
         </div>
       </div>
     );
   }
-
+  console.log("LoginPage: Rendering login form. isAuthCheckLoading:", isAuthCheckLoading, "errorMessage:", errorMessage);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
