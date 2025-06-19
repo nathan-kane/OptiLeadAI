@@ -17,15 +17,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // For form submission
-  const [isAuthCheckLoading, setIsAuthCheckLoading] = useState(true); // For initial auth check
+  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed from isLoading
+  const [isAuthCheckLoading, setIsAuthCheckLoading] = useState(true); 
 
   useEffect(() => {
     console.log("LoginPage: Mount & Initial Auth Check Effect Running. Current isAuthCheckLoading:", isAuthCheckLoading);
     if (!auth) {
       console.error("LoginPage: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
       setErrorMessage("Authentication service failed to load. Check Firebase configuration and initialization.");
-      setIsAuthCheckLoading(false); // Stop loading on critical auth init error
+      setIsAuthCheckLoading(false); 
       console.log("LoginPage: Auth init error, setting isAuthCheckLoading to false.");
       return;
     }
@@ -34,14 +34,14 @@ export default function LoginPage() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("LoginPage: onAuthStateChanged FIRED. User object:", user ? user.uid : null);
       if (user) {
-        console.log("LoginPage: User IS authenticated (uid:", user.uid, "), attempting redirect to /.");
+        console.log("LoginPage: onAuthStateChanged detected USER (uid:", user.uid, "), attempting redirect to /.");
         router.replace('/');
-        console.log("LoginPage: router.replace('/') CALLED. isAuthCheckLoading state will remain true as component might unmount.");
-        // No need to set isAuthCheckLoading to false here, as we are navigating away.
+        console.log("LoginPage: onAuthStateChanged - router.replace('/') CALLED.");
+        // Component might unmount, so setting isAuthCheckLoading to false here might not always run or be relevant.
       } else {
-        console.log("LoginPage: User is NOT authenticated. Allowing login form.");
+        console.log("LoginPage: onAuthStateChanged detected NO USER. Allowing login form.");
         setIsAuthCheckLoading(false);
-        console.log("LoginPage: set isAuthCheckLoading to false.");
+        console.log("LoginPage: onAuthStateChanged - set isAuthCheckLoading to false.");
       }
     });
 
@@ -49,14 +49,14 @@ export default function LoginPage() {
       console.log("LoginPage: Unmount & Initial Auth Check Effect Cleanup.");
       unsubscribe();
     };
-  }, [router]); // router is stable, effect runs once on mount
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Crucial: Prevent default form submission
+    e.preventDefault(); 
     console.log("LoginPage: handleLogin CALLED. Email:", email, "Password entered (length):", password.length);
     setErrorMessage(null);
-    setIsLoading(true);
-    console.log("LoginPage: setIsLoading to true.");
+    setIsSubmitting(true);
+    console.log("LoginPage: setIsSubmitting to true.");
 
     console.log("LoginPage: NEXT_PUBLIC_FIREBASE_API_KEY present in handleLogin:", !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
     console.log("LoginPage: Auth object in handleLogin:", auth);
@@ -64,18 +64,20 @@ export default function LoginPage() {
     if (!auth) {
       console.error("LoginPage: Firebase auth object is not available in handleLogin. Initialization might have failed.");
       setErrorMessage("Login service is temporarily unavailable. Please try again later.");
-      setIsLoading(false);
-      console.log("LoginPage: Auth object missing in handleLogin, setIsLoading to false.");
+      setIsSubmitting(false);
+      console.log("LoginPage: Auth object missing in handleLogin, setIsSubmitting to false.");
       return;
     }
 
     try {
       console.log("LoginPage: Attempting Firebase signInWithEmailAndPassword...");
-      await signInWithEmailAndPassword(auth, email, password);
-      // If signInWithEmailAndPassword is successful, the onAuthStateChanged listener
-      // in the useEffect hook will detect the new user state and trigger router.replace('/').
-      // No direct navigation call here.
-      console.log("LoginPage: Firebase signInWithEmailAndPassword call completed. Waiting for onAuthStateChanged to handle redirect.");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("LoginPage: Firebase signInWithEmailAndPassword successful. User:", userCredential.user.uid);
+      // Explicitly redirect after successful sign-in
+      console.log("LoginPage: handleLogin - Attempting explicit redirect to /");
+      router.replace('/');
+      console.log("LoginPage: handleLogin - router.replace('/') CALLED.");
+      // setIsSubmitting will be set to false in finally, but navigation might occur before that.
     } catch (error: any) {
       let friendlyMessage = "Failed to log in. Please check your credentials.";
       if (error.code) {
@@ -95,15 +97,15 @@ export default function LoginPage() {
             friendlyMessage = "Network error. Please check your connection and try again.";
             break;
           default:
-            friendlyMessage = `Login failed (Code: ${error.code}): ${error.message || 'An unexpected error occurred.'}`;
+            friendlyMessage = `Login failed. An unexpected error occurred.`;
         }
       }
       console.error("LoginPage: Full login error object:", error);
       console.error("LoginPage: Login error code:", error.code, "Message:", error.message);
       setErrorMessage(friendlyMessage);
     } finally {
-      setIsLoading(false);
-      console.log("LoginPage: setIsLoading to false in finally block.");
+      setIsSubmitting(false);
+      console.log("LoginPage: setIsSubmitting to false in finally block.");
       console.log("LoginPage: handleLogin finished.");
     }
   };
@@ -119,7 +121,7 @@ export default function LoginPage() {
       </div>
     );
   }
-  console.log("LoginPage: Rendering login form. isAuthCheckLoading:", isAuthCheckLoading, "errorMessage:", errorMessage);
+  console.log("LoginPage: Rendering login form. isAuthCheckLoading:", isAuthCheckLoading, "isSubmitting:", isSubmitting, "errorMessage:", errorMessage);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -167,8 +169,8 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading || (isAuthCheckLoading && !errorMessage) }>
-              {isLoading ? 'Logging in...' : 'Login'}
+            <Button type="submit" className="w-full" disabled={isSubmitting || isAuthCheckLoading}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}

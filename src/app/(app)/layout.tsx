@@ -16,32 +16,30 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true); // Start true to show loader until auth is checked
+  const [isAppLoading, setIsAppLoading] = useState(true); // Renamed from isLoading
 
   useEffect(() => {
-    console.log("AppLayout: Mount & Auth Check Effect Running. Current isLoading:", isLoading);
+    console.log("AppLayout: Mount & Auth Check Effect Running. Current isAppLoading:", isAppLoading);
     if (!auth) {
       console.error("AppLayout: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
-      // This is a critical failure.
-      // We should stop loading and potentially show an error or redirect to a general error page.
-      // For now, to prevent loops, let's just stop loading. Content might be an error or blank.
-      setIsLoading(false);
-      console.log("AppLayout: Auth init error, setting isLoading to false.");
+      setIsAppLoading(false);
+      console.log("AppLayout: Auth init error, setting isAppLoading to false.");
+      // Consider redirecting to an error page or login if auth fundamentally fails
+      router.replace('/login'); // Fallback redirect
+      console.log("AppLayout: Auth init error - router.replace('/login') CALLED.");
       return;
     }
     console.log("AppLayout: Auth object IS available for onAuthStateChanged setup.");
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("AppLayout: onAuthStateChanged FIRED. User object:", user ? user.uid : null);
+      console.log("AppLayout: onAuthStateChanged FIRED. User object:", user ? user.uid : null, "Current isAppLoading:", isAppLoading);
       if (user) {
         console.log("AppLayout: User IS authenticated (uid:", user.uid, "). Allowing app content.");
-        setIsLoading(false); // User is authenticated, stop loading, show app content
-        console.log("AppLayout: User found, setting isLoading to false.");
+        setIsAppLoading(false); 
+        console.log("AppLayout: User found, setting isAppLoading to false.");
       } else {
         console.log("AppLayout: User is NOT authenticated. Attempting redirect to /login.");
-        // This layout protects /app routes. If no user, redirect to /login.
-        // The isLoading state for AppLayout becomes less relevant here if we are navigating away.
-        // The Login page will handle its own loading state (isAuthCheckLoading).
+        // isAppLoading might remain true if we redirect, LoginPage will handle its own loading.
         router.replace('/login');
         console.log("AppLayout: router.replace('/login') CALLED.");
       }
@@ -51,10 +49,10 @@ export default function AppLayout({
       console.log("AppLayout: Unmount & Auth Check Effect Cleanup.");
       unsubscribe();
     };
-  }, [router]); // router is stable, effect runs once on mount
+  }, [router]); 
 
-  if (isLoading) {
-    console.log("AppLayout: isLoading is TRUE. Rendering loading spinner.");
+  if (isAppLoading) {
+    console.log("AppLayout: isAppLoading is TRUE. Rendering loading spinner.");
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -65,7 +63,7 @@ export default function AppLayout({
     );
   }
 
-  console.log("AppLayout: isLoading is FALSE. Rendering app shell.");
+  console.log("AppLayout: isAppLoading is FALSE. Rendering app shell.");
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full">
