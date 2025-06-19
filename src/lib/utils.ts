@@ -1,5 +1,6 @@
+
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -18,8 +19,22 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+  console.log("[src/lib/utils.ts] Firebase app initialized successfully.");
+} else {
+  app = getApp();
+  console.log("[src/lib/utils.ts] Firebase app already initialized, getting existing instance.");
+}
+
 export const auth = getAuth(app);
+if (auth) {
+  console.log("[src/lib/utils.ts] Firebase Auth initialized successfully.");
+} else {
+  console.error("[src/lib/utils.ts] Firebase Auth FAILED to initialize.");
+}
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
