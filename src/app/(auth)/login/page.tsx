@@ -21,15 +21,19 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage(null);
+    console.log("Login attempt initiated for:", email); // Added log
+    setErrorMessage(null); // Clear previous errors
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      console.log("Attempting Firebase sign-in..."); // Added log
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Firebase sign-in successful:", userCredential.user); // Added log
       // On successful login, Firebase automatically handles the user session.
       // Redirect to the dashboard.
       router.push('/');
     } catch (error: any) {
+      console.error("Full login error object:", error); // Log the full error object
       let friendlyMessage = "Failed to log in. Please check your credentials.";
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         friendlyMessage = "Invalid email or password. Please try again.";
@@ -37,11 +41,15 @@ export default function LoginPage() {
         friendlyMessage = "The email address is not valid.";
       } else if (error.code === 'auth/user-disabled') {
         friendlyMessage = "This account has been disabled.";
+      } else {
+        // Catch other Firebase or network errors
+        friendlyMessage = `Login failed: ${error.message}`;
       }
-      console.error("Login error:", error.code, error.message);
+      console.error("Login error code:", error.code, "Message:", error.message);
       setErrorMessage(friendlyMessage);
     } finally {
       setIsLoading(false);
+      console.log("Login attempt finished."); // Added log
     }
   };
 
@@ -59,13 +67,13 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="m@example.com" 
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required 
+                required
               />
             </div>
             <div className="space-y-2">
@@ -75,16 +83,16 @@ export default function LoginPage() {
                   Forgot your password?
                 </Link>
               </div>
-              <Input 
-                id="password" 
-                type="password" 
+              <Input
+                id="password"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
             </div>
             {errorMessage && (
-              <div className="text-red-600 text-center text-sm">
+              <div className="text-red-600 text-center text-sm p-2 bg-red-100 border border-red-300 rounded-md">
                 {errorMessage}
               </div>
             )}
