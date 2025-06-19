@@ -29,10 +29,10 @@ const profileFormSchema = z.object({
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
-  }),
+  }).readonly(), // Email should ideally be read-only if sourced from auth
   jobTitle: z.string().optional(),
   company: z.string().optional(),
-  bio: z.string().optional(),
+  bio: z.string().max(200, { message: "Bio must be 200 characters or less." }).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -60,28 +60,30 @@ export default function ProfilePage() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser(user);
+        console.log("[ProfilePage] Current user set. UID:", user.uid, "Email:", user.email);
         // Pre-fill form with user's display name and email from auth
         // Other fields (jobTitle, company, bio) would ideally be fetched from Firestore if a profile already exists.
         // For now, we'll initialize them based on defaultValues or previously entered data.
         form.reset({
           name: user.displayName || defaultValues.name,
-          email: user.email || defaultValues.email,
-          jobTitle: form.getValues().jobTitle || defaultValues.jobTitle, // Retain typed value or default
-          company: form.getValues().company || defaultValues.company,   // Retain typed value or default
-          bio: form.getValues().bio || defaultValues.bio,           // Retain typed value or default
+          email: user.email || defaultValues.email, // Make sure email is populated
+          jobTitle: form.getValues().jobTitle || defaultValues.jobTitle,
+          company: form.getValues().company || defaultValues.company,
+          bio: form.getValues().bio || defaultValues.bio,
         });
       } else {
         setCurrentUser(null);
-        // Optionally, redirect or disable form if user is not authenticated, though AppLayout should handle major auth guarding.
+        console.log("[ProfilePage] No current user.");
+        // AppLayout should handle redirecting to login if no user
       }
     });
     return () => unsubscribe();
-  }, [form]); // form is included to allow re-initializing if form instance changes, though typically stable.
+  }, [form]);
 
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
-    if (!currentUser || !currentUser.uid) { // Ensure UID is present
+    if (!currentUser || !currentUser.uid) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in with a valid user ID to save your profile.",
@@ -91,17 +93,19 @@ export default function ProfilePage() {
       return;
     }
 
+    console.log("[ProfilePage] Submitting profile for UID:", currentUser.uid, "with data:", data);
+
     try {
-      await saveProfile(currentUser.uid, data); // Pass UID to saveProfile
+      const result = await saveProfile(currentUser.uid, data);
       toast({
-        title: "Profile saved successfully!",
+        title: result.message || "Profile saved successfully!",
       });
     } catch (error) {
-      console.error("Error saving profile from page:", error);
+      console.error("[ProfilePage] Error saving profile from page:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         title: "Failed to save profile.",
-        description: errorMessage, // This will now include the "Missing or insufficient permissions" detail
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -136,7 +140,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="your@email.com" {...field} value={field.value ?? ""} />
+                  <Input type="email" placeholder="your@email.com" {...field} value={field.value ?? ""} readOnly />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -187,7 +191,7 @@ export default function ProfilePage() {
             )}
           />
           <Button type="submit" disabled={isLoading || !currentUser}>
-            Save Profile
+            {isLoading ? "Saving..." : "Save Profile"}
           </Button>
         </form>
       </Form>

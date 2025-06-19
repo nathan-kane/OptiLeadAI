@@ -13,25 +13,30 @@ interface ProfileData {
 }
 
 export async function saveProfile(userId: string, profileData: ProfileData) {
+  console.log("[Action: saveProfile] Received userId:", userId);
   if (!userId) {
+    console.error("[Action: saveProfile] Error: User ID is missing.");
     throw new Error("User ID is required to save profile data.");
   }
+
+  const userDocRef = doc(db, "users", userId);
+  console.log(`[Action: saveProfile] Attempting to write to Firestore path: ${userDocRef.path}`);
+
   try {
-    console.log("Attempting to save profile data for UID:", userId);
-    // Use UID as document ID
-    const userDocRef = doc(db, "users", userId);
-    console.log(`Attempting to save profile data to Firestore document: users/${userId}`);
     await setDoc(userDocRef, profileData, { merge: true });
-    console.log(`Profile data successfully saved for user with UID: ${userId}`);
+    console.log(`[Action: saveProfile] Profile data successfully saved for userId: ${userId} to path: ${userDocRef.path}`);
+    return { success: true, message: "Profile saved successfully!" };
   } catch (error: any) {
-    console.error("Error saving profile data:", error);
+    console.error("[Action: saveProfile] Firestore setDoc error:", error);
     if (error.code === 'permission-denied' || (error.message && error.message.toLowerCase().includes("permission"))) {
       console.error(
-        "Firestore permission error: Please check your Firestore security rules in the Firebase Console. " +
-        "Ensure that authenticated users have write access to their own document in the 'users' collection using their UID as the document ID (e.g., match /users/{userId} { allow write: if request.auth.uid == userId; })."
+        "[Action: saveProfile] Firestore permission error: Please double-check your Firestore security rules in the Firebase Console. " +
+        "Ensure that authenticated users have write access to their own document in the 'users' collection using their UID as the document ID (e.g., match /users/{userId} { allow write: if request.auth.uid == userId; }). " +
+        `The current attempt was for path: users/${userId}.`
       );
     }
-    // Re-throw the error so the client-side can handle it (e.g., display an error toast)
+    // Re-throw the error so the client-side can handle it
     throw new Error(`Failed to save profile data: ${error.message}`);
   }
 }
+
