@@ -28,7 +28,7 @@ export async function saveProfile(userId: string, profileData: ProfileData) {
     if (error.code === 'permission-denied' || (error.message && error.message.toLowerCase().includes("permission"))) {
       console.error(
         "Firestore permission error: Please check your Firestore security rules in the Firebase Console. " +
-        "Ensure that authenticated users have write access to their own document in the 'users' collection using their UID as the document ID."
+        "Ensure that authenticated users have write access to their own document in the 'users' collection using their UID as the document ID (e.g., match /users/{userId} { allow write: if request.auth.uid == userId; })."
       );
     }
     // Re-throw the error so the client-side can handle it (e.g., display an error toast)

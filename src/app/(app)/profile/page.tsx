@@ -5,7 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { onAuthStateChanged, type User } from "firebase/auth"; 
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { auth } from '@/lib/utils'; // Import the pre-initialized auth instance
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { saveProfile } from "./actions";
-import { auth } from '@/lib/utils'; // Import the pre-initialized auth instance
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -37,7 +37,6 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// Default values should be strings for controlled components
 const defaultValues: ProfileFormValues = {
   name: "",
   email: "",
@@ -61,29 +60,31 @@ export default function ProfilePage() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser(user);
-        // Optionally pre-fill form if data exists, or ensure email is current user's email
+        // Pre-fill form with user's display name and email from auth
+        // Other fields (jobTitle, company, bio) would ideally be fetched from Firestore if a profile already exists.
+        // For now, we'll initialize them based on defaultValues or previously entered data.
         form.reset({
-          name: user.displayName || "", // Or fetch from Firestore if profile exists
-          email: user.email || "", // Auth email, user can change if desired in form
-          jobTitle: "", // Fetch from Firestore if profile exists
-          company: "", // Fetch from Firestore if profile exists
-          bio: "", // Fetch from Firestore if profile exists
+          name: user.displayName || defaultValues.name,
+          email: user.email || defaultValues.email,
+          jobTitle: form.getValues().jobTitle || defaultValues.jobTitle, // Retain typed value or default
+          company: form.getValues().company || defaultValues.company,   // Retain typed value or default
+          bio: form.getValues().bio || defaultValues.bio,           // Retain typed value or default
         });
       } else {
         setCurrentUser(null);
-        // Handle user not being authenticated if necessary, though AppLayout should cover this
+        // Optionally, redirect or disable form if user is not authenticated, though AppLayout should handle major auth guarding.
       }
     });
     return () => unsubscribe();
-  }, [form]);
+  }, [form]); // form is included to allow re-initializing if form instance changes, though typically stable.
 
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
-    if (!currentUser) {
+    if (!currentUser || !currentUser.uid) { // Ensure UID is present
       toast({
         title: "Authentication Error",
-        description: "You must be logged in to save your profile.",
+        description: "You must be logged in with a valid user ID to save your profile.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -91,16 +92,16 @@ export default function ProfilePage() {
     }
 
     try {
-      await saveProfile(currentUser.uid, data);
+      await saveProfile(currentUser.uid, data); // Pass UID to saveProfile
       toast({
         title: "Profile saved successfully!",
       });
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.error("Error saving profile from page:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         title: "Failed to save profile.",
-        description: errorMessage,
+        description: errorMessage, // This will now include the "Missing or insufficient permissions" detail
         variant: "destructive",
       });
     }
