@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,24 +8,35 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/utils"; // Assuming auth is exported from utils.ts
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/utils"; 
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // For form submission
+  const [isAuthCheckLoading, setIsAuthCheckLoading] = useState(true); // For initial auth check
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("LoginPage: onAuthStateChanged - User is signed in, redirecting to /");
+        router.replace('/'); // Use replace to avoid login page in history if already logged in
+      } else {
+        console.log("LoginPage: onAuthStateChanged - User is not signed in.");
+        setIsAuthCheckLoading(false); // Allow rendering login form
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Login attempt initiated for:", email);
     setErrorMessage(null);
     setIsLoading(true);
-
-    console.log("Firebase API Key Present:", !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-    console.log("Auth object:", auth);
 
     if (!auth) {
       console.error("Firebase auth object is not available. Initialization might have failed.");
@@ -37,11 +47,11 @@ export default function LoginPage() {
 
     try {
       console.log("Attempting Firebase sign-in...");
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Firebase sign-in successful:", userCredential.user);
-      router.push('/');
+      // signInWithEmailAndPassword will trigger onAuthStateChanged if successful
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log("Firebase sign-in attempt successful (onAuthStateChanged will handle redirect).");
+      // No direct router.push here, onAuthStateChanged will handle it.
     } catch (error: any) {
-      console.error("Full login error object:", error);
       let friendlyMessage = "Failed to log in. Please check your credentials.";
       if (error.code) {
         switch (error.code) {
@@ -70,6 +80,17 @@ export default function LoginPage() {
       console.log("Login attempt finished.");
     }
   };
+
+  if (isAuthCheckLoading) {
+     return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="flex flex-col items-center gap-4">
+            <Logo />
+            <p className="text-muted-foreground">Checking authentication status...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -118,7 +139,7 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isAuthCheckLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
