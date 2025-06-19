@@ -64,7 +64,8 @@ export default function ProfilePage() {
       console.error("Error saving profile:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
-        title: "Failed to save profile.", //: ${errorMessage}`, // You can optionally include the error message here
+        title: "Failed to save profile.",
+        description: errorMessage, // Display the detailed error message
         variant: "destructive",
       });
     }
