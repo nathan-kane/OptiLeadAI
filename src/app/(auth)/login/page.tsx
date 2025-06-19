@@ -21,35 +21,53 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Login attempt initiated for:", email); // Added log
-    setErrorMessage(null); // Clear previous errors
+    console.log("Login attempt initiated for:", email);
+    setErrorMessage(null);
     setIsLoading(true);
 
+    console.log("Firebase API Key Present:", !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+    console.log("Auth object:", auth);
+
+    if (!auth) {
+      console.error("Firebase auth object is not available. Initialization might have failed.");
+      setErrorMessage("Login service is temporarily unavailable. Please try again later.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      console.log("Attempting Firebase sign-in..."); // Added log
+      console.log("Attempting Firebase sign-in...");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Firebase sign-in successful:", userCredential.user); // Added log
-      // On successful login, Firebase automatically handles the user session.
-      // Redirect to the dashboard.
+      console.log("Firebase sign-in successful:", userCredential.user);
       router.push('/');
     } catch (error: any) {
-      console.error("Full login error object:", error); // Log the full error object
+      console.error("Full login error object:", error);
       let friendlyMessage = "Failed to log in. Please check your credentials.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        friendlyMessage = "Invalid email or password. Please try again.";
-      } else if (error.code === 'auth/invalid-email') {
-        friendlyMessage = "The email address is not valid.";
-      } else if (error.code === 'auth/user-disabled') {
-        friendlyMessage = "This account has been disabled.";
-      } else {
-        // Catch other Firebase or network errors
-        friendlyMessage = `Login failed: ${error.message}`;
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            friendlyMessage = "Invalid email or password. Please try again.";
+            break;
+          case 'auth/invalid-email':
+            friendlyMessage = "The email address is not valid.";
+            break;
+          case 'auth/user-disabled':
+            friendlyMessage = "This account has been disabled.";
+            break;
+          case 'auth/network-request-failed':
+            friendlyMessage = "Network error. Please check your connection and try again.";
+            break;
+          default:
+            friendlyMessage = `Login failed: ${error.message || 'An unexpected error occurred.'}`;
+        }
       }
       console.error("Login error code:", error.code, "Message:", error.message);
       setErrorMessage(friendlyMessage);
     } finally {
       setIsLoading(false);
-      console.log("Login attempt finished."); // Added log
+      console.log("Login attempt finished.");
     }
   };
 
@@ -74,6 +92,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-label="Email"
               />
             </div>
             <div className="space-y-2">
@@ -89,10 +108,11 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                aria-label="Password"
               />
             </div>
             {errorMessage && (
-              <div className="text-red-600 text-center text-sm p-2 bg-red-100 border border-red-300 rounded-md">
+              <div className="text-red-600 text-center text-sm p-2 bg-red-100 border border-red-300 rounded-md" role="alert">
                 {errorMessage}
               </div>
             )}
