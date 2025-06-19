@@ -19,7 +19,7 @@ export default function AppLayout({
   const [isAppLoading, setIsAppLoading] = useState(true); // Renamed from isLoading
 
   useEffect(() => {
-    console.log("AppLayout: Mount & Auth Check Effect Running. Current isAppLoading:", isAppLoading);
+    console.log("AppLayout: Mount & Auth Check Effect Running. Initial isAppLoading:", isAppLoading);
     if (!auth) {
       console.error("AppLayout: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
       setIsAppLoading(false);
@@ -32,16 +32,20 @@ export default function AppLayout({
     console.log("AppLayout: Auth object IS available for onAuthStateChanged setup.");
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("AppLayout: onAuthStateChanged FIRED. User object:", user ? user.uid : null, "Current isAppLoading:", isAppLoading);
+      // Note: isAppLoading inside this callback might be stale if it's not in deps,
+      // but decisions should be based on 'user' object.
+      console.log("AppLayout: onAuthStateChanged FIRED. User object:", user ? user.uid : null);
       if (user) {
         console.log("AppLayout: User IS authenticated (uid:", user.uid, "). Allowing app content.");
-        setIsAppLoading(false); 
+        setIsAppLoading(false);
         console.log("AppLayout: User found, setting isAppLoading to false.");
       } else {
         console.log("AppLayout: User is NOT authenticated. Attempting redirect to /login.");
-        // isAppLoading might remain true if we redirect, LoginPage will handle its own loading.
         router.replace('/login');
         console.log("AppLayout: router.replace('/login') CALLED.");
+        // If redirecting, isAppLoading might ideally be true until LoginPage takes over,
+        // or set to false here if LoginPage isn't expected to show its own loader.
+        // For now, let LoginPage handle its own loading state.
       }
     });
 
@@ -49,7 +53,7 @@ export default function AppLayout({
       console.log("AppLayout: Unmount & Auth Check Effect Cleanup.");
       unsubscribe();
     };
-  }, [router]); 
+  }, [router]); // Dependency array changed
 
   if (isAppLoading) {
     console.log("AppLayout: isAppLoading is TRUE. Rendering loading spinner.");
