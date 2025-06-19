@@ -2,10 +2,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { getAuth, onAuthStateChanged, type User } from "firebase/auth"; // Added User type
+import { onAuthStateChanged, type User } from "firebase/auth"; 
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,9 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { saveProfile } from "./actions";
-import { app } from "@/lib/firebase/firebase"; // Import the Firebase app instance
-
-const auth = getAuth(app); // Initialize auth using the app instance
+import { auth } from '@/lib/utils'; // Import the pre-initialized auth instance
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -124,7 +122,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your Name" {...field} />
+                  <Input placeholder="Your Name" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -137,7 +135,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="your@email.com" {...field} />
+                  <Input type="email" placeholder="your@email.com" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -150,7 +148,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Job Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Software Engineer" {...field} />
+                  <Input placeholder="e.g. Software Engineer" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -163,7 +161,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Company</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Acme Corp" {...field} />
+                  <Input placeholder="e.g. Acme Corp" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -180,6 +178,7 @@ export default function ProfilePage() {
                     placeholder="Tell us a little about yourself..."
                     className="resize-none"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
