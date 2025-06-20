@@ -60,6 +60,7 @@ export default function ProfilePage() {
     console.log("[ProfilePage] Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+ console.log("[ProfilePage] onAuthStateChanged: User found.", user);
         setCurrentUser(user);
         console.log("[ProfilePage] User authenticated. UID:", user.uid, "Email:", user.email);
         form.reset({
@@ -70,6 +71,7 @@ export default function ProfilePage() {
           bio: form.getValues().bio || defaultValues.bio,
         });
       } else {
+ console.log("[ProfilePage] onAuthStateChanged: No user found.");
         setCurrentUser(null);
         console.log("[ProfilePage] No current user / User logged out.");
       }
@@ -82,13 +84,30 @@ export default function ProfilePage() {
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
-    if (!currentUser || !currentUser.uid) {
+ console.log("[ProfilePage] onSubmit: Attempting to save profile.");
+ console.log("[ProfilePage] onSubmit: Current currentUser state:", currentUser);    if (!currentUser) { // Check for currentUser object existence
       toast({
         title: "Authentication Error",
-        description: "You must be logged in with a valid user ID to save your profile.",
+ description: "You must be logged in to save your profile.",
         variant: "destructive",
       });
-      console.error("[ProfilePage] onSubmit: currentUser or currentUser.uid is null/undefined. UID:", currentUser?.uid);
+ console.error("[ProfilePage] onSubmit: currentUser is null/undefined.");
+ setIsLoading(false);
+      return;
+    }
+
+    let idToken;
+    try {
+      // Get the ID token from the authenticated user
+      idToken = await currentUser.getIdToken();
+      console.log("[ProfilePage] Got ID token:", idToken);
+    } catch (error) {
+      console.error("[ProfilePage] Error getting ID token:", error);
+      toast({
+        title: "Authentication Error",
+        description: "Could not get authentication token.",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
@@ -96,7 +115,8 @@ export default function ProfilePage() {
     console.log("[ProfilePage] Submitting profile for UID:", currentUser.uid, "with data:", data);
 
     try {
-      const result = await saveProfile(currentUser.uid, data);
+      // Pass the ID token to the server action
+      const result = await saveProfile(idToken, data); // Pass token instead of userId
       toast({
         title: result.message || "Profile saved successfully!",
       });
