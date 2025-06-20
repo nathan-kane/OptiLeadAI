@@ -4,8 +4,7 @@
 // You'll likely need to initialize firebase-admin in a separate server-side file
 // and import the initialized admin instance. This is a placeholder import.
 // import { admin } from '@/lib/firebase/admin'; // Assuming you have an admin initialization file
-import { auth as adminAuth, firestore } from "@/lib/firebase/admin";
-
+import { getAdminApp } from "@/lib/firebase/admin";
 interface ProfileData {
   name: string;
   email: string;
@@ -19,6 +18,8 @@ interface ProfileData {
 export async function saveProfile(idToken: string, profileData: ProfileData) {
   console.log('FIREBASE_PRIVATE_KEY in saveProfile action:', process.env.FIREBASE_PRIVATE_KEY ? '***** (present)' : 'undefined (missing)');
   console.log(`[Action: saveProfile] Received idToken.`);
+  const adminApp = getAdminApp();
+  const adminAuth = adminApp.auth();
 
   let decodedToken;
   try {
@@ -34,6 +35,7 @@ export async function saveProfile(idToken: string, profileData: ProfileData) {
 
   const userId = decodedToken.uid; // Use the UID from the verified token
 
+  const firestore = adminApp.firestore();
   const userDocRef = firestore.collection("users").doc(userId);
   console.log(`[Action: saveProfile] Attempting to write to Firestore path: ${userDocRef.path}`);
   console.log(`[Action: saveProfile] Data to be saved: ${JSON.stringify(profileData)}`);
