@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 // Add other client-side Firebase imports as needed (e.g., auth, firestore)
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,6 +17,6 @@ const firebaseConfig = {
 // Initialize client-side Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app); // This is now safe in client-side
-
+const auth = getAuth(app);
 // Export client-side Firebase instances you need
-export { app, analytics };
+export { app, analytics, auth };
