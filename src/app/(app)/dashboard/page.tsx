@@ -109,80 +109,83 @@ export default function DashboardPage() {
         actions={<Button>Add New Lead</Button>}
       />
       <Card>
-        <CardHeader>
-          <CardTitle>Active Leads</CardTitle>
-          <CardDescription>Showing {leads.length} leads. Interact with them using the actions menu.</CardDescription>
+        <CardHeader className="px-2 sm:px-6 py-4">
+          <CardTitle className="text-lg sm:text-2xl">Active Leads</CardTitle>
+          <CardDescription className="text-xs sm:text-base">Showing {leads.length} leads. Interact with them using the actions menu.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">Score</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Last Interaction</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leads.map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell className="font-medium">{lead.score}</TableCell>
-                  <TableCell>{lead.name}</TableCell>
-                  <TableCell>{lead.company}</TableCell>
-                  <TableCell>
-                    <Badge variant={getPriorityBadgeVariant(lead.priority)}>{lead.priority}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={getStatusBadgeVariant(lead.status)}
-                      className={getStatusColorClass(lead.status) || (lead.status === 'Qualified' ? 'bg-accent text-accent-foreground hover:bg-accent/80' : '')}
-                    >
-                      {lead.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DataValidationIcon status={lead.dataValidationStatus} />
-                  </TableCell>
-                  <TableCell>{lead.lastInteraction}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.name}`)}>
-                          <Eye className="mr-2 h-4 w-4" /> View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleNotifySales(lead)}>
-                          <BellPlus className="mr-2 h-4 w-4" /> Notify Sales
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Contacted')}>
-                          <Edit3 className="mr-2 h-4 w-4" /> Mark as Contacted
-                        </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Qualified')}>
-                           <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Qualified
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                         <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Converted')} className="text-green-600">
-                           Mark as Converted
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Disqualified')} className="text-red-600">
-                           Mark as Disqualified
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <CardContent className="px-0 sm:px-6 py-2">
+          {/* Responsive scroll container for table */}
+          <div className="w-full overflow-x-auto">
+            <Table className="min-w-[700px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px] text-xs sm:text-sm">Score</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Name</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Company</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Priority</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Data</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Last Interaction</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id} className="text-xs sm:text-sm">
+                    <TableCell className="font-medium">{lead.score}</TableCell>
+                    <TableCell>{lead.name}</TableCell>
+                    <TableCell>{lead.company}</TableCell>
+                    <TableCell>
+                      <Badge variant={getPriorityBadgeVariant(lead.priority)}>{lead.priority}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={getStatusBadgeVariant(lead.status)}
+                        className={getStatusColorClass(lead.status) || (lead.status === 'Qualified' ? 'bg-accent text-accent-foreground hover:bg-accent/80' : '')}
+                      >
+                        {lead.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DataValidationIcon status={lead.dataValidationStatus} />
+                    </TableCell>
+                    <TableCell>{lead.lastInteraction}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.name}`)}>
+                            <Eye className="mr-2 h-4 w-4" /> View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleNotifySales(lead)}>
+                            <BellPlus className="mr-2 h-4 w-4" /> Notify Sales
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Contacted')}>
+                            <Edit3 className="mr-2 h-4 w-4" /> Mark as Contacted
+                          </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Qualified')}>
+                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Qualified
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                           <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Converted')} className="text-green-600">
+                             Mark as Converted
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Disqualified')} className="text-red-600">
+                             Mark as Disqualified
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>
