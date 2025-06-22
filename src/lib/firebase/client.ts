@@ -1,7 +1,7 @@
 // src/lib/firebase/client.ts
-import { initializeApp, getApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,18 +13,46 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-let app;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-  console.log("[client.ts] Firebase app initialized.");
-} else {
-  app = getApp();
-  console.log("[client.ts] Existing Firebase app retrieved.");
+// We will export these, but they will be assigned conditionally.
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+
+// Check if all required config values are present.
+const isConfigValid = Object.values(firebaseConfig).every(Boolean);
+
+try {
+    if (isConfigValid) {
+        if (!getApps().length) {
+          app = initializeApp(firebaseConfig);
+          console.log("[client.ts] Firebase app initialized.");
+        } else {
+          app = getApp();
+          console.log("[client.ts] Existing Firebase app retrieved.");
+        }
+        auth = getAuth(app);
+        db = getFirestore(app);
+    } else {
+        // This error will be thrown during server-side rendering if env vars are missing.
+        // The try/catch below will handle it gracefully, preventing a server crash.
+        throw new Error("Firebase client config is missing or invalid. Check your environment variables.");
+    }
+} catch (error) {
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.error("!!! FIREBASE CLIENT INITIALIZATION FAILED                  !!!");
+    if (error instanceof Error) {
+        console.error(`!!! Error: ${error.message}`);
+    }
+    console.error("!!! Firebase features will not work.                       !!!");
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    
+    // Assign dummy objects to prevent the application from crashing on import.
+    // The app will be broken, but at least the server will start.
+    app = {} as FirebaseApp;
+    auth = {} as Auth;
+    db = {} as Firestore;
 }
 
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 // Export client-side Firebase instances you need
 export { app, auth, db };
