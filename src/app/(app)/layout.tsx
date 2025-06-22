@@ -31,9 +31,30 @@ export default function AppLayout({
     }
     console.log("AppLayout: Auth object IS available for onAuthStateChanged setup.");
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log(`AppLayout: onAuthStateChanged FIRED for path: ${pathname}. User object: ${user ? user.uid : null}. Current isAppLoading: ${isAppLoading}`);
+      // If on /verify-email, do nothing and let the page handle its own logic
+      if (pathname === '/verify-email') {
+        setIsAppLoading(false);
+        return;
+      }
       if (user) {
+        // Only check profile if not already on /profile
+        if (pathname !== '/profile') {
+          try {
+            const { getUserProfile } = await import('@/lib/get-profile-name');
+            const profile = await getUserProfile(user.uid);
+            if (!profile) {
+              console.log('AppLayout: No user profile found, redirecting to /profile');
+              setIsAppLoading(false);
+              router.replace('/profile');
+              return;
+            }
+          } catch (err) {
+            console.error('AppLayout: Error checking user profile:', err);
+            // Optionally, redirect to /profile or show an error
+          }
+        }
         console.log(`AppLayout: User IS authenticated (uid: ${user.uid}). Path: ${pathname}. Allowing app content.`);
         setIsAppLoading(false);
         console.log("AppLayout: User found, setting isAppLoading to false.");
@@ -64,6 +85,10 @@ export default function AppLayout({
   }
 
   console.log(`AppLayout: isAppLoading is FALSE for path: ${pathname}. Rendering app shell.`);
+  // If on /verify-email, render only the page content (no dashboard shell)
+  if (pathname.startsWith('/verify-email')) {
+    return <>{children}</>;
+  }
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full">

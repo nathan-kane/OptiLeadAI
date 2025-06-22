@@ -40,9 +40,9 @@ const VerifyEmailContent: React.FC = () => {
 
           // Double check if email is now marked as verified on the client
           if (auth.currentUser.emailVerified) {
-            setMessage('Email successfully verified! Redirecting to dashboard...');
+            setMessage('Email successfully verified! Redirecting to login...');
             setTimeout(() => {
-              router.push('/dashboard'); // Navigate to dashboard
+              router.push('/login'); // Always redirect to login
             }, 2500);
           } else {
             // This state can happen if client-side propagation is delayed.
@@ -56,7 +56,7 @@ const VerifyEmailContent: React.FC = () => {
       } else {
           // No current user on this client, but email is verified on backend.
           // User needs to log in.
-          setMessage('Email successfully verified! Please log in to access your dashboard.');
+          setMessage('Email successfully verified! Please log in to continue.');
           setTimeout(() => {
             router.push('/login');
           }, 3000);
@@ -90,8 +90,8 @@ const VerifyEmailContent: React.FC = () => {
         {error && <p className="text-sm text-red-500">{error}</p>}
         {!message && !error && <p className="text-sm text-muted-foreground">Processing...</p>}
          {(message || error) && (
-          <Button onClick={() => router.push(error && !auth.currentUser ? '/login' : '/')} className="mt-4" disabled={message === 'Verifying your email...'}>
-            { error ? 'Go to Login' : 'Go to Dashboard'}
+          <Button onClick={() => router.push('/login')} className="mt-4" disabled={message === 'Verifying your email...'}>
+            Go to Login
           </Button>
         )}
       </div>

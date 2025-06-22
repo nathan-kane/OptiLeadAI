@@ -93,9 +93,6 @@ export default function SignupPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 pt-0">
-          <Button className="w-full" variant="outline" asChild>
-            <Link href="/">Skip for now</Link>
-          </Button>
           <div className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="underline text-primary">
