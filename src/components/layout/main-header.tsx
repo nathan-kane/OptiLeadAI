@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
-import { getProfileName } from '@/lib/get-profile-name';
+import { getUserProfile } from '@/lib/get-profile-name';
 
 export function MainHeader() {
   const pathname = usePathname();
@@ -25,9 +25,9 @@ export function MainHeader() {
       console.log('[MainHeader] Auth state changed. User:', user);
       if (user) {
         // Fetch the name from Firestore profile document
-        const name = await getProfileName(user.uid);
-        console.log('[MainHeader] getProfileName returned:', name);
-        setUserName(name);
+        const profile = await getUserProfile(user.uid);
+        console.log('[MainHeader] getUserProfile returned:', profile);
+        setUserName(profile?.name || null);
       } else {
         console.log('[MainHeader] No user detected, setting userName to null');
         setUserName(null);

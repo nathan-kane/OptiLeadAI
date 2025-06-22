@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { saveProfile } from "./actions";
+import { getUserProfile } from "@/lib/get-profile-name"; // Import the function to fetch user profile
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -59,10 +60,23 @@ export default function ProfilePage() {
   useEffect(() => {
     console.log("[ProfilePage] Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
- console.log("[ProfilePage] onAuthStateChanged: User found.", user);
+      if (user) { // User is signed in
+        console.log("[ProfilePage] onAuthStateChanged: User found.", user);
         setCurrentUser(user);
         console.log("[ProfilePage] User authenticated. UID:", user.uid, "Email:", user.email);
+
+        // Fetch additional profile data from Firestore
+        getUserProfile(user.uid).then(profileData => {
+          console.log("[ProfilePage] Fetched profile data:", profileData);
+          // Use the fetched data to populate the form, merging with auth user data
+          form.reset({
+            name: user.displayName || profileData?.name || defaultValues.name,
+            email: user.email || defaultValues.email,
+            jobTitle: profileData?.jobTitle || defaultValues.jobTitle,
+            company: profileData?.company || defaultValues.company,
+            bio: profileData?.bio || defaultValues.bio,
+          });
+        }).catch(error => console.error("[ProfilePage] Error fetching user profile:", error));
         form.reset({
           name: user.displayName || defaultValues.name,
           email: user.email || defaultValues.email,
@@ -71,7 +85,7 @@ export default function ProfilePage() {
           bio: form.getValues().bio || defaultValues.bio,
         });
       } else {
- console.log("[ProfilePage] onAuthStateChanged: No user found.");
+        console.log("[ProfilePage] onAuthStateChanged: No user found.");
         setCurrentUser(null);
         console.log("[ProfilePage] No current user / User logged out.");
       }

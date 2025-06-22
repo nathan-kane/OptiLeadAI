@@ -2,26 +2,21 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/client';
 
 /**
- * Fetches the user's profile name from Firestore using their UID.
- * Returns the name string if found, otherwise null.
+ * Fetches the user's profile document from Firestore using their UID.
+ * Returns the profile data object if found, otherwise null.
  */
-export async function getProfileName(uid: string): Promise<string | null> {
+export async function getUserProfile(uid: string): Promise<any | null> {
   try {
-    console.log('[getProfileName] Fetching Firestore profile for UID:', uid);
+    console.log('[getUserProfile] Fetching Firestore profile document for UID:', uid);
     const profileRef = doc(db, 'users', uid);
     const profileSnap = await getDoc(profileRef);
-    console.log('[getProfileName] profileSnap.exists():', profileSnap.exists());
+    console.log('[getUserProfile] profileSnap.exists():', profileSnap.exists());
     if (profileSnap.exists()) {
       const data = profileSnap.data();
-      console.log('[getProfileName] profile data:', data);
-      if (typeof data.name === 'string' && data.name.trim() !== '') {
-        console.log('[getProfileName] Found name:', data.name);
-        return data.name;
-      } else {
-        console.log('[getProfileName] Name field missing or empty.');
-      }
+      console.log('[getUserProfile] Profile data found:', data);
+ return data;
     } else {
-      console.log('[getProfileName] No profile document found for UID:', uid);
+      console.log('[getUserProfile] No profile document found for UID:', uid);
     }
     return null;
   } catch (err) {
