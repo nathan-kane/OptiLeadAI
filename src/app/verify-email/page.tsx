@@ -1,3 +1,11 @@
+"use client";
+
+//import { useEffect, useState, Suspense } from 'react';
+// import { useRouter, useSearchParams } from 'next/navigation';
+// import { applyActionCode } from 'firebase/auth';
+// import { auth } from "@/lib/firebase/client";
+// import { Button } from "@/components/ui/button";
+
 
 "use client";
 
@@ -34,7 +42,7 @@ const VerifyEmailContent: React.FC = () => {
           if (auth.currentUser.emailVerified) {
             setMessage('Email successfully verified! Redirecting to dashboard...');
             setTimeout(() => {
-              router.push('/'); // Navigate to dashboard
+              router.push('/dashboard'); // Navigate to dashboard
             }, 2500);
           } else {
             // This state can happen if client-side propagation is delayed.
@@ -83,7 +91,7 @@ const VerifyEmailContent: React.FC = () => {
         {!message && !error && <p className="text-sm text-muted-foreground">Processing...</p>}
          {(message || error) && (
           <Button onClick={() => router.push(error && !auth.currentUser ? '/login' : '/')} className="mt-4" disabled={message === 'Verifying your email...'}>
-            { error ? 'Go to Login' : 'Go to Homepage'}
+            { error ? 'Go to Login' : 'Go to Dashboard'}
           </Button>
         )}
       </div>
