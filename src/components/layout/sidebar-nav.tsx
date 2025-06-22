@@ -4,15 +4,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import type { LucideIcon } from 'lucide-react';
 import {
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
+  Sidebar, SidebarHeader, SidebarContent, SidebarFooter,
+  SidebarMenu, SidebarMenuItem, SidebarMenuButton,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarSeparator,
@@ -22,10 +16,11 @@ import { navItems, type NavItem } from '@/config/nav';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase/client'; // Assuming you have a client-side auth instance
+import { onAuthStateChanged, User } from 'firebase/auth'; // Assuming you have a client-side auth instance
+import { auth } from '@/lib/firebase/client';
 import { getUserProfile } from '@/lib/get-profile-name'; // Assuming getUserProfile is in this file
-import { ProfileData } from '@/types'; // Assuming you have a type for ProfileData
+// Assuming you have a type for ProfileData
+type ProfileData = any;
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -63,6 +58,7 @@ export function SidebarNav() {
   }, {} as Record<string, NavItem[]>);
 
   return (
+    // Attempting to refresh file parsing
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader>
         <Link href="/dashboard" className="flex items-center gap-2 p-2">
@@ -78,17 +74,11 @@ export function SidebarNav() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href}>
-  <SidebarMenuButton
-    isActive={pathname === item.href || (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))}
-    tooltip={{ children: item.label }}
-    asChild
-  >
-    <span className="flex items-center">
-      <item.icon />
-      <span>{item.label}</span>
-    </span>
-  </SidebarMenuButton>
-</Link>
+                    <SidebarMenuButton isActive={pathname === item.href || (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))}>
+                      <item.icon />
+                      <span className="ml-2">{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
                 </SidebarMenuItem>
               ))}
             </SidebarGroup>
@@ -111,15 +101,17 @@ export function SidebarNav() {
           </div>
         ) : (
           // Placeholder or loading state when user is not logged in or profile is loading
-          <div className="flex items-center gap-3 p-2 group-data-[state=collapsed]:justify-center">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="https://placehold.co/40x40.png" alt="Placeholder Avatar" />
-              <AvatarFallback>U</AvatarFallback>
-            </div>
-            <div className="hidden group-data-[state=expanded]:block">
-              <p className="text-sm font-medium text-gray-400">Loading...</p>
-            </div>
-          </div>
+          <>
+              <div className="flex items-center gap-3 p-2 group-data-[state=collapsed]:justify-center">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="https://placehold.co/40x40.png" alt="Placeholder Avatar" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="hidden group-data-[state=expanded]:block">
+                <p className="text-sm font-medium text-gray-400">Loading...</p>
+              </div>
+          </>
         )}
           <Link href="/login">
   <Button variant="ghost" size="icon" className="w-full group-data-[state=expanded]:hidden">
