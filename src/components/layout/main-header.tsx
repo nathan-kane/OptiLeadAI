@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/utils';
+import { auth } from '@/lib/firebase/client';
 import { getProfileName } from '@/lib/get-profile-name';
 
 export function MainHeader() {

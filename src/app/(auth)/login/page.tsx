@@ -10,7 +10,7 @@ import { Logo } from "@/components/icons/logo";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/utils";
+import { auth } from "@/lib/firebase/client";
 
 export default function LoginPage() {
   const router = useRouter();

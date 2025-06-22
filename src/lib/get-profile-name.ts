@@ -1,5 +1,5 @@
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { auth } from './utils';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './firebase/client';
 
 /**
  * Fetches the user's profile name from Firestore using their UID.
@@ -8,7 +8,6 @@ import { auth } from './utils';
 export async function getProfileName(uid: string): Promise<string | null> {
   try {
     console.log('[getProfileName] Fetching Firestore profile for UID:', uid);
-    const db = getFirestore();
     const profileRef = doc(db, 'users', uid);
     const profileSnap = await getDoc(profileRef);
     console.log('[getProfileName] profileSnap.exists():', profileSnap.exists());
@@ -30,4 +29,3 @@ export async function getProfileName(uid: string): Promise<string | null> {
     return null;
   }
 }
-

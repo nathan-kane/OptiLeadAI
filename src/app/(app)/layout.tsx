@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/utils';
+import { auth } from '@/lib/firebase/client';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { MainHeader } from '@/components/layout/main-header';

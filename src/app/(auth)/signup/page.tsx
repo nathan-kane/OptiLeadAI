@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";;
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/utils"; // Assuming auth is exported from utils.ts
+import { auth } from "@/lib/firebase/client"; // Assuming auth is exported from utils.ts
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 

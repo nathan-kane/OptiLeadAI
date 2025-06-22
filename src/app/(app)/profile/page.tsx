@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth } from '@/lib/utils'; // Import the pre-initialized auth instance
+import { auth } from '@/lib/firebase/client'; // Import the pre-initialized auth instance
 
 import { Button } from "@/components/ui/button";
 import {
@@ -80,27 +80,25 @@ export default function ProfilePage() {
       console.log("[ProfilePage] Cleaning up onAuthStateChanged listener.");
       unsubscribe();
     };
-  }, []); // Dependency array changed to empty for stable listener setup
+  }, [form]); // Dependency array for stable listener setup
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
  console.log("[ProfilePage] onSubmit: Attempting to save profile.");
- console.log("[ProfilePage] onSubmit: Current currentUser state:", currentUser);    if (!currentUser) { // Check for currentUser object existence
+    if (!currentUser) {
       toast({
         title: "Authentication Error",
  description: "You must be logged in to save your profile.",
         variant: "destructive",
       });
- console.error("[ProfilePage] onSubmit: currentUser is null/undefined.");
+ console.error("[ProfilePage] onSubmit: currentUser is null.");
  setIsLoading(false);
       return;
     }
 
     let idToken;
     try {
-      // Get the ID token from the authenticated user
       idToken = await currentUser.getIdToken();
-      console.log("[ProfilePage] Got ID token:", idToken);
     } catch (error) {
       console.error("[ProfilePage] Error getting ID token:", error);
       toast({
@@ -112,11 +110,9 @@ export default function ProfilePage() {
       return;
     }
 
-    console.log("[ProfilePage] Submitting profile for UID:", currentUser.uid, "with data:", data);
-
+    console.log(`[ProfilePage] Submitting profile for UID: ${currentUser.uid}`);
     try {
-      // Pass the ID token to the server action
-      const result = await saveProfile(idToken, data); // Pass token instead of userId
+      const result = await saveProfile(idToken, data);
       toast({
         title: result.message || "Profile saved successfully!",
       });
@@ -125,7 +121,7 @@ export default function ProfilePage() {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         title: "Failed to save profile.",
-        description: errorMessage, // This will now show the "Missing or insufficient permissions"
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -219,5 +215,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

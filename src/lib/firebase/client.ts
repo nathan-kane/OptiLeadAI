@@ -1,8 +1,7 @@
 // src/lib/firebase/client.ts
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// Add other client-side Firebase imports as needed (e.g., auth, firestore)
+import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,9 +13,18 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize client-side Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app); // This is now safe in client-side
+// Initialize Firebase
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+  console.log("[client.ts] Firebase app initialized.");
+} else {
+  app = getApp();
+  console.log("[client.ts] Existing Firebase app retrieved.");
+}
+
 const auth = getAuth(app);
+const db = getFirestore(app);
+
 // Export client-side Firebase instances you need
-export { app, analytics, auth };
+export { app, auth, db };

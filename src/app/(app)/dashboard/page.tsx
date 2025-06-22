@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter
-import { auth } from '@/lib/utils'; // Import auth
+import { auth } from '@/lib/firebase/client'; // Import auth
 import { onAuthStateChanged } from 'firebase/auth'; // Import onAuthStateChanged
 
 const getPriorityBadgeVariant = (priority: Lead['priority']) => {
