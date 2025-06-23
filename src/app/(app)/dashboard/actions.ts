@@ -8,9 +8,9 @@ import { revalidatePath } from 'next/cache';
 const AddLeadFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   email: z.string().email('Please enter a valid email.'),
-  company: z.string().min(1, 'Company name is required.'),
+  company: z.string().optional(),
   jobTitle: z.string().optional(),
-  industry: z.string().optional(),
+  industry: z.string().optional(), // Make phone number required
   phone: z.string().optional(),
 });
 
@@ -47,7 +47,7 @@ export async function addLeadAction(
       company: parsed.data.company,
       jobTitle: parsed.data.jobTitle || '',
       industry: parsed.data.industry || '',
-      phone: parsed.data.phone || '',
+      phone: parsed.data.phone || '', // Ensure phone is included
       score: 0, // Initial score, can be updated by AI later
       priority: 'Low',
       status: 'New',

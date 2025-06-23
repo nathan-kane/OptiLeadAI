@@ -1,7 +1,7 @@
 export interface Lead {
   id: string;
   name: string;
-  company: string;
+  company?: string;
   email: string;
   phone?: string;
   industry?: string;

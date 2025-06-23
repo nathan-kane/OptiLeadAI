@@ -86,8 +86,17 @@ export function AddLeadForm() {
                 defaultValue={state?.fields?.email}
               />
             </div>
+             <div className="grid gap-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+ placeholder="(555) 555-5555"
+                defaultValue={state?.fields?.phone}
+              />
+            </div>
             <div className="grid gap-2">
-              <Label htmlFor="company">Company</Label>
+              <Label htmlFor="company">Company (Optional)</Label>
               <Input
                 id="company"
                 name="company"
