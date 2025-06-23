@@ -2,13 +2,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
+import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { MainHeader } from '@/components/layout/main-header';
 import { Logo } from '@/components/icons/logo';
+import { getUserProfile } from '@/lib/get-profile-name';
 
 export default function AppLayout({
   children,
@@ -16,64 +17,61 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname(); // Get current pathname
+  const pathname = usePathname();
   const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
-    console.log(`AppLayout: Mount & Auth Check Effect Running for path: ${pathname}. Initial isAppLoading: ${isAppLoading}`);
-    if (!auth) {
-      console.error("AppLayout: Auth object is NOT AVAILABLE for onAuthStateChanged setup! Firebase might not have initialized correctly.");
+    console.log(`AppLayout: Mount & Auth Check Effect Running for path: ${pathname}.`);
+    if (!auth?.onAuthStateChanged) {
+      console.error("AppLayout: Auth object is not available or invalid. Firebase might not have initialized correctly.");
       setIsAppLoading(false);
-      console.log("AppLayout: Auth init error, setting isAppLoading to false.");
-      router.replace('/login'); 
-      console.log("AppLayout: Auth init error - router.replace('/login') CALLED.");
+      router.replace('/login');
       return;
     }
-    console.log("AppLayout: Auth object IS available for onAuthStateChanged setup.");
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log(`AppLayout: onAuthStateChanged FIRED for path: ${pathname}. User object: ${user ? user.uid : null}. Current isAppLoading: ${isAppLoading}`);
-      // If on /verify-email, do nothing and let the page handle its own logic
+      console.log(`AppLayout: onAuthStateChanged fired. User: ${user ? user.uid : 'null'}`);
+      
+      // Allow the verify-email page to render without these checks
       if (pathname === '/verify-email') {
         setIsAppLoading(false);
         return;
       }
+
       if (user) {
-        // Only check profile if not already on /profile
+        // If user is authenticated, check for a profile (unless already on the profile page)
         if (pathname !== '/profile') {
           try {
-            const { getUserProfile } = await import('@/lib/get-profile-name');
             const profile = await getUserProfile(user.uid);
             if (!profile) {
-              console.log('AppLayout: No user profile found, redirecting to /profile');
-              setIsAppLoading(false);
+              console.log('AppLayout: No user profile found, redirecting to /profile to create one.');
               router.replace('/profile');
+              setIsAppLoading(false);
               return;
             }
           } catch (err) {
             console.error('AppLayout: Error checking user profile:', err);
-            // Optionally, redirect to /profile or show an error
+            // If profile check fails, still allow app to load to avoid getting stuck.
+            // You might want to handle this more gracefully, e.g., show an error toast.
           }
         }
-        console.log(`AppLayout: User IS authenticated (uid: ${user.uid}). Path: ${pathname}. Allowing app content.`);
+        console.log(`AppLayout: User is authenticated. Allowing app content at ${pathname}.`);
         setIsAppLoading(false);
-        console.log("AppLayout: User found, setting isAppLoading to false.");
       } else {
-        console.log(`AppLayout: User is NOT authenticated for path: ${pathname}. Attempting redirect to /login.`);
-        setIsAppLoading(false); // Stop loading as we are redirecting
+        // If no user, redirect to login
+        console.log(`AppLayout: User is not authenticated. Redirecting to /login.`);
         router.replace('/login');
-        console.log("AppLayout: router.replace('/login') CALLED because no user.");
+        setIsAppLoading(false);
       }
     });
 
     return () => {
-      console.log("AppLayout: Unmount & Auth Check Effect Cleanup.");
+      console.log("AppLayout: Unmounting and cleaning up auth listener.");
       unsubscribe();
     };
-  }, [router, pathname]); // Added pathname to dependency array
+  }, [router, pathname]);
 
   if (isAppLoading) {
-    console.log(`AppLayout: isAppLoading is TRUE for path: ${pathname}. Rendering loading spinner.`);
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -83,12 +81,13 @@ export default function AppLayout({
       </div>
     );
   }
-
-  console.log(`AppLayout: isAppLoading is FALSE for path: ${pathname}. Rendering app shell.`);
-  // If on /verify-email, render only the page content (no dashboard shell)
+  
+  // If on /verify-email or /profile when loading is done, render only children without the main layout shell
+  // to avoid flashing the dashboard UI.
   if (pathname.startsWith('/verify-email')) {
     return <>{children}</>;
   }
+
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full">
