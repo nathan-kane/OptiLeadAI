@@ -2,19 +2,19 @@
 "use client";
 
 import type { Lead } from '@/types';
-import { mockLeads } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, BellPlus, Edit3, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { MoreHorizontal, Eye, BellPlus, Edit3, AlertTriangle, CheckCircle2, Info, PlusCircle } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // Import useRouter
-import { auth } from '@/lib/firebase/client'; // Import auth
-import { onAuthStateChanged } from 'firebase/auth'; // Import onAuthStateChanged
+import { auth, db } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { AddLeadForm } from '@/components/add-lead-form';
 
 const getPriorityBadgeVariant = (priority: Lead['priority']) => {
   switch (priority) {
@@ -43,10 +43,9 @@ const getStatusBadgeVariant = (status: Lead['status']) => {
 };
 
 const getStatusColorClass = (status: Lead['status']) => {
-  // Use Tailwind classes for specific colors not covered by badge variants
   switch (status) {
-    case 'Qualified': return 'bg-green-500 hover:bg-green-600'; // Example custom color
-    case 'Converted': return 'bg-blue-500 hover:bg-blue-600'; // Example custom color
+    case 'Qualified': return 'bg-green-500 hover:bg-green-600';
+    case 'Converted': return 'bg-blue-500 hover:bg-blue-600';
     default: return '';
   }
 }
@@ -67,22 +66,32 @@ const DataValidationIcon = ({ status }: { status: Lead['dataValidationStatus']})
 
 export default function DashboardPage() {
   const { toast } = useToast();
-  const [leads, setLeads] = useState<Lead[]>(mockLeads.sort((a, b) => b.score - a.score));
-  const router = useRouter(); // Initialize useRouter
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Log when DashboardPage mounts to confirm it's being rendered
   useEffect(() => {
-    console.log("DashboardPage: Mounted. Checking auth state via AppLayout.");
-    // Auth check is primarily handled by AppLayout, but we can add specific logs if needed.
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("DashboardPage: User is authenticated (verified by page itself). UID:", user.uid);
+        console.log("DashboardPage: User authenticated. Setting up Firestore listener.");
+        const leadsQuery = query(collection(db, "leads"), orderBy("score", "desc"));
+        const unsubscribeSnapshot = onSnapshot(leadsQuery, (snapshot) => {
+          const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+          setLeads(leadsData);
+          setIsLoading(false);
+        }, (error) => {
+          console.error("Error fetching leads:", error);
+          toast({ variant: "destructive", title: "Error", description: "Could not fetch leads from the database." });
+          setIsLoading(false);
+        });
+        return () => unsubscribeSnapshot();
       } else {
-        console.log("DashboardPage: User is NOT authenticated (verified by page itself). Redirecting to /login via AppLayout is expected.");
+        console.log("DashboardPage: User is NOT authenticated.");
+        setIsLoading(false);
+        setLeads([]);
       }
     });
-    return () => unsubscribe();
-  }, []);
+    return () => unsubscribeAuth();
+  }, [toast]);
 
 
   const handleNotifySales = (lead: Lead) => {
@@ -93,10 +102,11 @@ export default function DashboardPage() {
   };
 
   const handleUpdateStatus = (leadId: string, newStatus: Lead['status']) => {
-    setLeads(prevLeads => prevLeads.map(lead => lead.id === leadId ? {...lead, status: newStatus} : lead));
+    // This would be a Firestore update in a real app
+    console.log(`Updating lead ${leadId} to status ${newStatus}`);
     toast({
       title: "Status Updated",
-      description: `Lead status changed to ${newStatus}.`,
+      description: `Lead status changed to ${newStatus}. (Note: DB update not yet implemented)`,
     });
   };
 
@@ -106,15 +116,16 @@ export default function DashboardPage() {
       <PageHeader
         title="Lead Prioritization Dashboard"
         description="Focus on your most promising leads, sorted by AI score."
-        actions={<Button>Add New Lead</Button>}
+        actions={<AddLeadForm />}
       />
       <Card>
         <CardHeader className="px-2 sm:px-6 py-4">
           <CardTitle className="text-lg sm:text-2xl">Active Leads</CardTitle>
-          <CardDescription className="text-xs sm:text-base">Showing {leads.length} leads. Interact with them using the actions menu.</CardDescription>
+          <CardDescription className="text-xs sm:text-base">
+            {isLoading ? "Loading leads..." : `Showing ${leads.length} leads. Interact with them using the actions menu.`}
+          </CardDescription>
         </CardHeader>
         <CardContent className="px-0 sm:px-6 py-2">
-          {/* Responsive scroll container for table */}
           <div className="w-full overflow-x-auto">
             <Table className="min-w-[700px]">
               <TableHeader>
@@ -130,59 +141,71 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leads.map((lead) => (
-                  <TableRow key={lead.id} className="text-xs sm:text-sm">
-                    <TableCell className="font-medium">{lead.score}</TableCell>
-                    <TableCell>{lead.name}</TableCell>
-                    <TableCell>{lead.company}</TableCell>
-                    <TableCell>
-                      <Badge variant={getPriorityBadgeVariant(lead.priority)}>{lead.priority}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={getStatusBadgeVariant(lead.status)}
-                        className={getStatusColorClass(lead.status) || (lead.status === 'Qualified' ? 'bg-accent text-accent-foreground hover:bg-accent/80' : '')}
-                      >
-                        {lead.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DataValidationIcon status={lead.dataValidationStatus} />
-                    </TableCell>
-                    <TableCell>{lead.lastInteraction}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.name}`)}>
-                            <Eye className="mr-2 h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleNotifySales(lead)}>
-                            <BellPlus className="mr-2 h-4 w-4" /> Notify Sales
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Contacted')}>
-                            <Edit3 className="mr-2 h-4 w-4" /> Mark as Contacted
-                          </DropdownMenuItem>
-                           <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Qualified')}>
-                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Qualified
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                           <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Converted')} className="text-green-600">
-                             Mark as Converted
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Disqualified')} className="text-red-600">
-                             Mark as Disqualified
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center h-24">Loading...</TableCell>
+                  </TableRow>
+                ) : leads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center h-24">
+                      No leads found. Add one to get started!
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  leads.map((lead) => (
+                    <TableRow key={lead.id} className="text-xs sm:text-sm">
+                      <TableCell className="font-medium">{lead.score}</TableCell>
+                      <TableCell>{lead.name}</TableCell>
+                      <TableCell>{lead.company}</TableCell>
+                      <TableCell>
+                        <Badge variant={getPriorityBadgeVariant(lead.priority)}>{lead.priority}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={getStatusBadgeVariant(lead.status)}
+                          className={getStatusColorClass(lead.status) || (lead.status === 'Qualified' ? 'bg-accent text-accent-foreground hover:bg-accent/80' : '')}
+                        >
+                          {lead.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DataValidationIcon status={lead.dataValidationStatus} />
+                      </TableCell>
+                      <TableCell>{lead.lastInteraction}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.name}`)}>
+                              <Eye className="mr-2 h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleNotifySales(lead)}>
+                              <BellPlus className="mr-2 h-4 w-4" /> Notify Sales
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Contacted')}>
+                              <Edit3 className="mr-2 h-4 w-4" /> Mark as Contacted
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Qualified')}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Qualified
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Converted')} className="text-green-600">
+                              Mark as Converted
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Disqualified')} className="text-red-600">
+                              Mark as Disqualified
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
