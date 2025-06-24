@@ -45,8 +45,8 @@ export default function AppLayout({
             const profile = await getUserProfile(user.uid);
             if (!profile) {
               console.log('AppLayout: No user profile found, redirecting to /profile to create one.');
+              setIsAppLoading(false); // Set loading to false BEFORE redirect
               router.replace('/profile');
-              setIsAppLoading(false);
               return;
             }
           } catch (err) {
@@ -60,8 +60,8 @@ export default function AppLayout({
       } else {
         // If no user, redirect to login
         console.log(`AppLayout: User is not authenticated. Redirecting to /login.`);
+        setIsAppLoading(false); // Set loading to false BEFORE redirect
         router.replace('/login');
-        setIsAppLoading(false);
       }
     });
 
