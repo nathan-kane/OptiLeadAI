@@ -59,5 +59,11 @@ export const navItems: NavItem[] = [
     icon: User,
     group: 'Configuration',
   },
+  {
+    href: '/openhermes-test',
+    label: 'OpenHermes Test',
+    icon: Settings,
+    group: 'Development',
+  },
 ];
 
