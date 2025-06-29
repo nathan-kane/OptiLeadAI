@@ -16,6 +16,12 @@ export const navItems: NavItem[] = [
     icon: LayoutDashboard,
     group: 'Overview',
   },
+  {
+    href: '/prospecting',
+    label: 'Prospecting Campaigns',
+    icon: Target,
+    group: 'Lead Management',
+  },
  {
     href: '/lead-search',
     label: 'Lead Search',
