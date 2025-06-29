@@ -1,55 +1,78 @@
 "use client";
 
-
 import { useState } from 'react';
-import { getAIResponse } from '@/utils/openHermesClient';
+//import { getAIResponse } from '@/utils/openHermesClient';
+import { triggerOutboundCall } from '@/utils/callServiceClient';
 
 export default function OpenHermesChatPage() {
-  const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
+  const [phone, setPhone] = useState('');
+  const [callStatus, setCallStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [summaryStatus, setSummaryStatus] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
-  const handleSendPrompt = async () => {
+  const handleCall = async () => {
     setLoading(true);
+    setCallStatus(null);
+    const result = await triggerOutboundCall(phone);
+    setCallStatus(result.message);
+    setLoading(false);
+  };
+
+  const handleSummaryTest = async () => {
+    setSummaryLoading(true);
+    setSummaryStatus(null);
     try {
-      const aiResponse = await getAIResponse(prompt);
-      setResponse(aiResponse);
-    } catch (error) {
-      console.error('Error fetching AI response:', error);
-      setResponse('Error fetching response.');
-    } finally {
-      setLoading(false);
+      const res = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          call_sid: 'test_sid_123',
+          summary: 'This is a test summary.',
+          metadata: { phone }
+        })
+      });
+      const data = await res.json();
+      setSummaryStatus(JSON.stringify(data, null, 2));
+    } catch (e: any) {
+      setSummaryStatus('Error: ' + e.message);
     }
+    setSummaryLoading(false);
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">OpenHermes Chat</h1>
+    <div style={{ maxWidth: 400, margin: '2rem auto', padding: 20, border: '1px solid #eee', borderRadius: 8 }}>
+      <h2>Trigger Outbound Call</h2>
+      <input
+        type="tel"
+        placeholder="Enter phone number (e.g. +1234567890)"
+        value={phone}
+        onChange={e => setPhone(e.target.value)}
+        style={{ width: '100%', padding: 8, marginBottom: 12 }}
+      />
+      <button
+        onClick={handleCall}
+        disabled={loading || !phone}
+        style={{ width: '100%', padding: 10, background: '#0070f3', color: '#fff', border: 'none', borderRadius: 4 }}
+      >
+        {loading ? 'Calling...' : 'Trigger Call'}
+      </button>
+      {callStatus && <div style={{ marginTop: 16 }}>{callStatus}</div>}
 
-      <div className="mb-4">
-        <textarea
-          className="w-full p-2 border border-gray-300 rounded-md"
-          rows={6}
-          placeholder="Enter your prompt here..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-      </div>
-
-      <div className="mb-4">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-          onClick={handleSendPrompt}
-          disabled={loading || prompt.trim() === ''}
-        >
-          {loading ? 'Sending...' : 'Send Prompt'}
-        </button>
-      </div>
-
-      <div className="border border-gray-300 rounded-md p-4 bg-gray-100 whitespace-pre-wrap">
-        <h2 className="text-xl font-semibold mb-2">AI Response:</h2>
-        {response ? response : 'Response will appear here...'}
-      </div>
+      <hr style={{ margin: '2rem 0' }} />
+      <h2>Test Backend Outbound Call</h2>
+      <button
+        onClick={handleSummaryTest}
+        disabled={summaryLoading}
+        style={{ width: '100%', padding: 10, background: '#1c7c54', color: '#fff', border: 'none', borderRadius: 4 }}
+      >
+        {summaryLoading ? 'Testing...' : 'Test /api/summary Outbound'}
+      </button>
+      {summaryStatus && (
+        <pre style={{ marginTop: 16, background: '#f6f8fa', padding: 10, borderRadius: 4, fontSize: 13 }}>
+          {summaryStatus}
+        </pre>
+      )}
     </div>
   );
 }
