@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { db } from '@/lib/firebase/client';
+import { triggerOutboundCall } from '@/utils/callServiceClient';
 import {
   collection,
   getDocs,
@@ -39,6 +40,11 @@ export default function ProspectingPage() {
   // State for leads
   const [leadLists, setLeadLists] = useState<LeadList[]>([]);
   const [selectedLeadListId, setSelectedLeadListId] = useState<string>("");
+
+  // State for outbound call
+  const [phone, setPhone] = useState("");
+  const [callStatus, setCallStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Fetch scripts from Firestore
   useEffect(() => {
@@ -172,6 +178,32 @@ export default function ProspectingPage() {
         </select>
         <button onClick={handleEdit} disabled={!selectedScriptId} style={{ marginLeft: 10 }}>Edit</button>
         <button onClick={handleNew} style={{ marginLeft: 6 }}>New Script</button>
+      </div>
+
+      {/* Trigger Outbound Call */}
+      <div style={{ marginBottom: 20, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
+        <h2>Trigger Outbound Call</h2>
+        <input
+          type="tel"
+          placeholder="Enter phone number (e.g. +1234567890)"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          style={{ width: '100%', padding: 8, marginBottom: 12 }}
+        />
+        <button
+          onClick={async () => {
+            setLoading(true);
+            setCallStatus(null);
+            const result = await triggerOutboundCall({ to_phone: phone, script_id: selectedScriptId });
+            setCallStatus(result.message);
+            setLoading(false);
+          }}
+          disabled={loading || !phone || !selectedScriptId}
+          style={{ width: '100%', padding: 10, background: '#1c7c54', color: '#fff', border: 'none', borderRadius: 4 }}
+        >
+          {loading ? 'Calling...' : 'Trigger Call'}
+        </button>
+        {callStatus && <div style={{ marginTop: 16 }}>{callStatus}</div>}
       </div>
 
       {/* Script Editor Modal (inline for now) */}
