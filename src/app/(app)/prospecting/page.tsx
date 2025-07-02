@@ -78,14 +78,6 @@ export default function ProspectingPage() {
         </button>
         {callStatus && <div style={{ marginTop: 16 }}>{callStatus}</div>}
       </div>
-
-      <button
-        onClick={handleStartCampaign}
-        disabled={!selectedLeadListId}
-        style={{ width: "100%", padding: 12, background: "#1c7c54", color: "#fff", border: "none", borderRadius: 4, fontSize: 16 }}
-      >
-        Start Campaign
-      </button>
     </div>
   );
 }

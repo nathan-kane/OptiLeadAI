@@ -22,7 +22,7 @@ const VerifyEmailContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const oobCode = searchParams.get('oobCode');
+    const oobCode = searchParams?.get('oobCode');
 
     if (!oobCode) {
       setError('Verification code not found. Please ensure you are using the correct link from your email.');

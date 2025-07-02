@@ -18,6 +18,12 @@ export default function AppLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+
+  // Check if pathname is null before proceeding
+  if (pathname === null) {
+    return null; // Or some loading indicator/error handling
+  }
+
   const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
@@ -69,7 +75,7 @@ export default function AppLayout({
       console.log("AppLayout: Unmounting and cleaning up auth listener.");
       unsubscribe();
     };
-  }, [router, pathname]);
+  }, [router, pathname]); // Add pathname to dependency array
 
   if (isAppLoading) {
     return (
