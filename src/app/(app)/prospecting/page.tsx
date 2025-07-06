@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { triggerOutboundCall } from '@/utils/callServiceClient';
+import { startOutboundCall } from '@/utils/callServiceClient';
 
 // Placeholder type for leads
 interface LeadList {
@@ -67,7 +67,7 @@ export default function ProspectingPage() {
           onClick={async () => {
             setLoading(true);
             setCallStatus(null);
-            const result = await triggerOutboundCall({ to_phone: phone, script_id: '' });
+            const result = await startOutboundCall(phone);
             setCallStatus(result.message);
             setLoading(false);
           }}
