@@ -55,7 +55,10 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/caseless": "^0.12.5",
+    "@types/connect": "^3.4.38",
+    "@types/node": "^20.19.4",
+    "@types/prop-types": "^15.7.15",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "genkit-cli": "^1.8.0",

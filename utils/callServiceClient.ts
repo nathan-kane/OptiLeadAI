@@ -27,6 +27,7 @@ export async function triggerOutboundCall({ to_phone, script_id }: { to_phone: s
 
 // New function for the /start-outbound-call endpoint
 export async function startOutboundCall(phone_number: string): Promise<any> {
+  // Use the environment variable for the Call Service URL
   const CALL_SERVICE_URL = process.env.NEXT_PUBLIC_CALL_SERVICE_URL || '';
   if (!CALL_SERVICE_URL) {
     return { success: false, message: 'Call Service URL not set' };
