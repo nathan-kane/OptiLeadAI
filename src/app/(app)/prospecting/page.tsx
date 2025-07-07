@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { startOutboundCall } from '@/utils/callServiceClient';
+import SystemPromptManager from './SystemPromptManager';
 
 // Placeholder type for leads
 interface LeadList {
@@ -35,6 +36,7 @@ export default function ProspectingPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto", padding: 24, border: "1px solid #eee", borderRadius: 10 }}>
+      <SystemPromptManager />
       <h1>Prospecting Campaigns</h1>
 
       {/* Lead List Selector */}

@@ -13,6 +13,9 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+console.log('[FIREBASE CONFIG]', firebaseConfig);
+
+
 // We will export these, but they will be assigned conditionally.
 let app: FirebaseApp;
 let auth: Auth;
