@@ -9,7 +9,11 @@ interface SystemPrompt {
   prompt: string;
 }
 
-export default function SystemPromptManager() {
+interface SystemPromptManagerProps {
+  onPromptSelected?: (prompt: SystemPrompt | null) => void;
+}
+
+export default function SystemPromptManager({ onPromptSelected }: SystemPromptManagerProps) {
   const [prompts, setPrompts] = useState<SystemPrompt[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [promptTitle, setPromptTitle] = useState<string>("");
@@ -44,6 +48,9 @@ export default function SystemPromptManager() {
     setPromptText(found ? found.prompt : "");
     setSuccess(null);
     setError(null);
+    if (onPromptSelected) {
+      onPromptSelected(found || null);
+    }
   }
 
   async function handleSavePrompt() {
@@ -97,7 +104,16 @@ export default function SystemPromptManager() {
           rows={4}
           style={{ width: '100%', padding: 8, marginTop: 4, resize: 'vertical' }}
           value={promptText}
-          onChange={e => setPromptText(e.target.value)}
+          onChange={e => {
+            setPromptText(e.target.value);
+            if (onPromptSelected) {
+              onPromptSelected({
+                id: selectedPromptId,
+                title: promptTitle,
+                prompt: e.target.value
+              });
+            }
+          }}
           placeholder="Enter or edit your system prompt here..."
         />
       </div>

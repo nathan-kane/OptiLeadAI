@@ -20,6 +20,7 @@ export default function ProspectingPage() {
   const [phone, setPhone] = useState("");
   const [callStatus, setCallStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedPrompt, setSelectedPrompt] = useState<{ id: string; title: string; prompt: string } | null>(null);
 
   useEffect(() => {
     // TODO: Fetch from /api/leads
@@ -36,7 +37,7 @@ export default function ProspectingPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto", padding: 24, border: "1px solid #eee", borderRadius: 10 }}>
-      <SystemPromptManager />
+      <SystemPromptManager onPromptSelected={setSelectedPrompt} />
       <h1>Prospecting Campaigns</h1>
 
       {/* Lead List Selector */}
@@ -69,7 +70,7 @@ export default function ProspectingPage() {
           onClick={async () => {
             setLoading(true);
             setCallStatus(null);
-            const result = await startOutboundCall(phone);
+            const result = await startOutboundCall(phone, selectedPrompt?.prompt || "");
             setCallStatus(result.message);
             setLoading(false);
           }}

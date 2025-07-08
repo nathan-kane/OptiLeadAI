@@ -26,7 +26,7 @@ export async function triggerOutboundCall({ to_phone, script_id }: { to_phone: s
 }
 
 // New function for the /start-outbound-call endpoint
-export async function startOutboundCall(phone_number: string): Promise<any> {
+export async function startOutboundCall(phone_number: string, system_prompt: string): Promise<any> {
   // Use the environment variable for the Call Service URL
   const CALL_SERVICE_URL = process.env.NEXT_PUBLIC_CALL_SERVICE_URL || '';
   if (!CALL_SERVICE_URL) {
@@ -38,7 +38,7 @@ export async function startOutboundCall(phone_number: string): Promise<any> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ phone_number }),
+      body: JSON.stringify({ phone_number, system_prompt }),
     });
     const data = await res.json();
     if (!res.ok) {
