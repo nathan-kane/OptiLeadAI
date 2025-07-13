@@ -81,13 +81,13 @@ export default function ProspectingPage() {
     for (let i = 0; i < leads.length; i++) {
       const lead = leads[i];
       try {
-        const res = await fetch('/api/start-call', {
+        const res = await fetch('https://twilio-elevenlabs-bridge-2953a0702d8a.us-central1.run.app/api/start-call', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: lead.firstName,
-            phoneNumber: lead.phone,
-            scriptId: selectedPrompt.id,
+            phone_number: lead.phone,
+            voice_id: selectedPrompt.id,
+            system_prompt: selectedPrompt.prompt || undefined,
           }),
         });
         const data = await res.json();
