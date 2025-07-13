@@ -25,6 +25,9 @@ export default function ProspectingPage() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
+  const [singlePhone, setSinglePhone] = useState<string>("");
+  const [singleCallLoading, setSingleCallLoading] = useState(false);
+  const [singleCallStatus, setSingleCallStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function ProspectingPage() {
     for (let i = 0; i < leads.length; i++) {
       const lead = leads[i];
       try {
-        const res = await fetch('https://twilio-elevenlabs-bridge-2953a0702d8a.us-central1.run.app/api/start-call', {
+        const res = await fetch('/api/start-call', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -108,10 +111,64 @@ export default function ProspectingPage() {
     setCampaignStatus('Campaign completed.');
   };
 
+  // Handler for single outbound call
+  const handleSingleCall = async () => {
+    if (!selectedPrompt?.id) {
+      setSingleCallStatus('Please select a script before making a call.');
+      return;
+    }
+    if (!singlePhone.trim()) {
+      setSingleCallStatus('Please enter a phone number.');
+      return;
+    }
+    setSingleCallLoading(true);
+    setSingleCallStatus(null);
+    try {
+      const res = await fetch('/api/start-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone_number: singlePhone.trim(),
+          voice_id: selectedPrompt.id,
+          system_prompt: selectedPrompt.prompt || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSingleCallStatus(`Failed to call ${singlePhone}: ${data.message}`);
+      } else {
+        setSingleCallStatus(`Called ${singlePhone} successfully.`);
+      }
+    } catch (err: any) {
+      setSingleCallStatus(`Error calling ${singlePhone}: ${err.message}`);
+    }
+    setSingleCallLoading(false);
+  };
+
   return (
     <div style={{ maxWidth: 700, margin: "2rem auto", padding: 24, border: "1px solid #eee", borderRadius: 10 }}>
       <SystemPromptManager onPromptSelected={setSelectedPrompt} />
       <h1>Prospecting Campaigns</h1>
+
+      {/* Single Call UI */}
+      <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
+        <h2>Single Outbound Call</h2>
+        <input
+          type="text"
+          placeholder="Enter phone number"
+          value={singlePhone}
+          onChange={e => setSinglePhone(e.target.value)}
+          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+        />
+        <button
+          onClick={handleSingleCall}
+          disabled={singleCallLoading || !selectedPrompt?.id || !singlePhone.trim()}
+          style={{ padding: '8px 18px', background: (!selectedPrompt?.id || !singlePhone.trim()) ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
+        >
+          {singleCallLoading ? 'Calling...' : 'Call Now'}
+        </button>
+        {singleCallStatus && <div style={{ marginTop: 12 }}>{singleCallStatus}</div>}
+      </div>
 
       {/* Lead List Selector */}
       <div style={{ marginBottom: 20 }}>
