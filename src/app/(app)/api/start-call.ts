@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const EXTERNAL_API_URL = 'https://twilio-elevenlabs-bridge-2953a0702d8a.us-central1.run.app/api/start-call';
+const EXTERNAL_API_URL = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
 
 export async function POST(req: NextRequest) {
   try {
