@@ -1,3 +1,4 @@
+
 // src/app/(app)/lead-scoring/actions.ts
 "use server";
 
@@ -201,4 +202,3 @@ export async function updateScoringRule(
     return { error: "Failed to update scoring rule. " + (error instanceof Error ? error.message : String(error)) };
   }
 }
-
