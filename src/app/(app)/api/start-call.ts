@@ -4,6 +4,7 @@ const baseUrl = process.env.NEXT_PUBLIC_CALL_SERVICE_URL;
 const EXTERNAL_API_URL = `${baseUrl}/start-call`;
 
 export async function POST(req: NextRequest) {
+  console.log('[API/start-call] Using backend URL:', EXTERNAL_API_URL);
   try {
     const body = await req.json();
     console.log('[API/start-call] Received body:', body);
