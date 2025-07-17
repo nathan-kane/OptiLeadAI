@@ -117,7 +117,7 @@ export default function ProspectingPage() {
   }
 
   // Determine the endpoint used for the call
-  const apiEndpoint = '/api/start-call';
+  const apiEndpoint = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
 
   const handleSingleCall = async () => {
     if (!selectedPrompt?.id) {
