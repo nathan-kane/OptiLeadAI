@@ -154,8 +154,9 @@ export default function ProspectingPage() {
         setSingleCallLoading(false);
         return;
       }
+      console.log('[SingleCall] Backend response:', data);
       if (!res.ok || !data.success) {
-        setSingleCallStatus(`Failed to call ${singlePhone}: ${data.message}`);
+        setSingleCallStatus(`Failed to call ${singlePhone}: ${data.message || 'Unknown error'}`);
       } else {
         setSingleCallStatus(`Called ${singlePhone} successfully.`);
       }
