@@ -112,19 +112,31 @@ export default function ProspectingPage() {
   };
 
   // Handler for single outbound call
+  function isValidE164(phone: string) {
+    return /^\+\d{10,15}$/.test(phone);
+  }
+
+  // Determine the endpoint used for the call
+  const apiEndpoint = '/api/start-call';
+
   const handleSingleCall = async () => {
     if (!selectedPrompt?.id) {
-      setSingleCallStatus('Please select a script before making a call.');
+      setSingleCallStatus('Please select a script before calling.');
       return;
     }
     if (!singlePhone.trim()) {
       setSingleCallStatus('Please enter a phone number.');
       return;
     }
+    if (!isValidE164(singlePhone.trim())) {
+      setSingleCallStatus('Please enter a valid phone number in E.164 format (e.g., +15555555555)');
+      return;
+    }
     setSingleCallLoading(true);
     setSingleCallStatus(null);
     try {
-      const res = await fetch('/api/start-call', {
+      console.log('[SingleCall] Using endpoint:', apiEndpoint);
+      const res = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -133,7 +145,15 @@ export default function ProspectingPage() {
           system_prompt: selectedPrompt.prompt || undefined,
         }),
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.clone().json();
+      } catch {
+        const text = await res.text();
+        setSingleCallStatus(`Backend did not return JSON. Raw response: ${text}`);
+        setSingleCallLoading(false);
+        return;
+      }
       if (!res.ok || !data.success) {
         setSingleCallStatus(`Failed to call ${singlePhone}: ${data.message}`);
       } else {
@@ -153,6 +173,9 @@ export default function ProspectingPage() {
       {/* Single Call UI */}
       <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
         <h2>Single Outbound Call</h2>
+      <div style={{ marginBottom: 8, color: '#888', fontSize: 13 }}>
+        <strong>Endpoint used:</strong> {apiEndpoint}
+      </div>
         <input
           type="text"
           placeholder="Enter phone number"
