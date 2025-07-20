@@ -174,9 +174,6 @@ export default function ProspectingPage() {
       {/* Single Call UI */}
       <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
         <h2>Single Outbound Call</h2>
-      <div style={{ marginBottom: 8, color: '#888', fontSize: 13 }}>
-        <strong>Endpoint used:</strong> {apiEndpoint}
-      </div>
         <input
           type="text"
           placeholder="Enter phone number"
