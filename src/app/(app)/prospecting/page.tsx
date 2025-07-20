@@ -91,6 +91,7 @@ export default function ProspectingPage() {
             phone_number: lead.phone,
             voice_id: selectedPrompt.id,
             system_prompt: selectedPrompt.prompt || undefined,
+            name: lead.firstName, // Add the name parameter here
           }),
         });
         const data = await res.json();
@@ -113,7 +114,7 @@ export default function ProspectingPage() {
 
   // Handler for single outbound call
   function isValidE164(phone: string) {
-    return /^\+\d{10,15}$/.test(phone);
+    return /^+d{10,15}$/.test(phone);
   }
 
   // Determine the endpoint used for the call
@@ -143,6 +144,9 @@ export default function ProspectingPage() {
           phone_number: singlePhone.trim(),
           voice_id: selectedPrompt.id,
           system_prompt: selectedPrompt.prompt || undefined,
+          // Assuming you have a way to get the name for a single call, add it here
+          // For now, we'll just pass an empty string or a placeholder
+          name: '' 
         }),
       });
       let data;
