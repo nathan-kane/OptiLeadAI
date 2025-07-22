@@ -57,12 +57,12 @@ export default function ProspectingPage() {
             return;
           }
           const parsedLeads: Lead[] = data.map((row: any) => {
-            const name = (row.Name || '').trim();
-            const phone = (row.Phone || '').trim();
+            const name = (row['FULL NAME'] || '').trim();
+            const phone = (row['PHONE'] || '').trim();
             return { firstName: name.split(' ')[0] || '', phone };
           }).filter((lead: Lead) => lead.firstName && lead.phone);
           if (!parsedLeads.length) {
-            setCsvError('No valid leads found. Ensure columns are named Name and Phone.');
+            setCsvError('No valid leads found. Ensure columns are named FULL NAME and PHONE.');
             return;
           }
           setLeads(parsedLeads);
@@ -81,40 +81,113 @@ export default function ProspectingPage() {
     }
     setCampaignLoading(true);
     setCampaignStatus(null);
-    for (let i = 0; i < leads.length; i++) {
-      const lead = leads[i];
-      try {
-        const res = await fetch('/api/start-call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+    
+    // Set up SSE connection for call completion notifications
+    const eventSource = new EventSource('/api/call-events');
+    let callCompletionPromise: Promise<void> | null = null;
+    let currentPhoneNumber: string | null = null;
+    
+    const waitForCallCompletion = (phoneNumber: string): Promise<void> => {
+      return new Promise((resolve) => {
+        currentPhoneNumber = phoneNumber;
+        let resolved = false;
+        
+        // Set up SSE listener for call completion
+        const handleMessage = (event: MessageEvent) => {
+          try {
+            const eventData = JSON.parse(event.data);
+            if (eventData.type === 'call_ended' && eventData.data.phone_number === phoneNumber) {
+              console.log(`[Campaign] Call completed for ${phoneNumber}:`, eventData.data);
+              eventSource.removeEventListener('message', handleMessage);
+              if (!resolved) {
+                resolved = true;
+                resolve();
+              }
+            }
+          } catch (err) {
+            console.error('[Campaign] Error parsing SSE event:', err);
+          }
+        };
+        eventSource.addEventListener('message', handleMessage);
+        
+        // Fallback timeout (2 minutes) in case SSE events aren't working
+        const timeoutId = setTimeout(() => {
+          console.log(`[Campaign] Timeout waiting for call completion for ${phoneNumber}, proceeding to next call`);
+          eventSource.removeEventListener('message', handleMessage);
+          if (!resolved) {
+            resolved = true;
+            resolve();
+          }
+        }, 120000); // 2 minutes
+        
+        // Clean up timeout if SSE event arrives first
+        const originalResolve = resolve;
+        resolve = () => {
+          clearTimeout(timeoutId);
+          originalResolve();
+        };
+      });
+    };
+    
+    try {
+      for (let i = 0; i < leads.length; i++) {
+        const lead = leads[i];
+        try {
+          const requestBody = {
             phone_number: lead.phone,
-            voice_id: selectedPrompt.id,
-            system_prompt: selectedPrompt.prompt || undefined,
-            name: lead.firstName, // Add the name parameter here
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): ${data.message}`);
+            voice_id: selectedPrompt?.id || 'default-voice',
+            system_prompt: selectedPrompt?.prompt || undefined,
+            name: lead.firstName,
+          };
+          console.log(`[Campaign] Calling ${lead.firstName} at ${lead.phone}:`, requestBody);
+          
+          const res = await fetch('/api/start-call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+          });
+          console.log(`[Campaign] Response status: ${res.status}`);
+          
+          let data;
+          try {
+            data = await res.json();
+          } catch (jsonErr) {
+            console.error(`[Campaign] Failed to parse JSON response:`, jsonErr);
+            setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): Invalid response format`);
+            break;
+          }
+          
+          console.log(`[Campaign] Response data:`, data);
+          
+          if (!res.ok || !data.success) {
+            setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): ${data.message || `HTTP ${res.status}`}`);
+            break;
+          }
+          
+          setCampaignStatus(`Call started for ${lead.firstName} (${lead.phone}). Waiting for completion...`);
+          
+          // Wait for call completion via SSE before proceeding to next call
+          await waitForCallCompletion(lead.phone);
+          
+          setCampaignStatus(`Call completed for ${lead.firstName} (${lead.phone}).`);
+          
+        } catch (err: any) {
+          console.error(`[Campaign] Network/fetch error:`, err);
+          setCampaignStatus(`Error calling ${lead.firstName}: ${err.message}`);
           break;
         }
-        setCampaignStatus(`Called ${lead.firstName} (${lead.phone}) successfully.`);
-      } catch (err: any) {
-        setCampaignStatus(`Error calling ${lead.firstName}: ${err.message}`);
-        break;
       }
-      // Wait 3-5 seconds between calls
-      const delay = 3000 + Math.floor(Math.random() * 2000);
-      await new Promise(res => setTimeout(res, delay));
+    } finally {
+      // Clean up SSE connection
+      eventSource.close();
+      setCampaignLoading(false);
+      setCampaignStatus('Campaign completed.');
     }
-    setCampaignLoading(false);
-    setCampaignStatus('Campaign completed.');
   };
 
   // Handler for single outbound call
   function isValidE164(phone: string) {
-    return /^+d{10,15}$/.test(phone);
+    return /^\+\d{10,15}$/.test(phone);
   }
 
   // Determine the endpoint used for the call
@@ -195,21 +268,6 @@ export default function ProspectingPage() {
         {singleCallStatus && <div style={{ marginTop: 12 }}>{singleCallStatus}</div>}
       </div>
 
-      {/* Lead List Selector */}
-      <div style={{ marginBottom: 20 }}>
-        <label>Lead List:</label>
-        <select
-          value={selectedLeadListId}
-          onChange={(e) => setSelectedLeadListId(e.target.value)}
-          style={{ marginLeft: 10 }}
-        >
-          <option value="">Select a lead list</option>
-          {leadLists.map((lead) => (
-            <option key={lead.id} value={lead.id}>{lead.name}</option>
-          ))}
-        </select>
-      </div>
-
       {/* CSV Upload & Preview */}
       <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
         <h2>Upload Leads CSV</h2>
@@ -249,8 +307,8 @@ export default function ProspectingPage() {
       <div style={{ marginBottom: 20 }}>
         <button
           onClick={handleStartCampaign}
-          disabled={campaignLoading || leads.length === 0 || !selectedPrompt?.id}
-          style={{ padding: '12px 24px', background: leads.length === 0 || !selectedPrompt?.id ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
+          disabled={campaignLoading || leads.length === 0}
+          style={{ padding: '12px 24px', background: leads.length === 0 ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
         >
           {campaignLoading ? 'Starting Campaign...' : 'Start Campaign'}
         </button>
