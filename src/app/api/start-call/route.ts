@@ -6,15 +6,29 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     console.log('Incoming request body:', body);
-    const { phone_number, voice_id, system_prompt, name } = body;
-    if (!phone_number || !voice_id) {
-      console.error('Missing required fields:', { phone_number, voice_id });
-      return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
+    const { phoneNumber, prospectName, promptId } = body;
+    
+    if (!phoneNumber || !prospectName || !promptId) {
+      console.error('Missing required fields:', { phoneNumber, prospectName, promptId });
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Missing required fields: phoneNumber, prospectName, and promptId are required' 
+      }, { status: 400 });
     }
+    
+    // Map new parameters to external API format
+    const externalApiBody = {
+      phone_number: phoneNumber,
+      name: prospectName,
+      prompt_id: promptId,
+      // Add any other required fields for the external API
+      voice_id: 'default' // You may want to make this configurable
+    };
+    
     const externalRes = await fetch(EXTERNAL_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone_number, voice_id, system_prompt, name }),
+      body: JSON.stringify(externalApiBody),
     });
     
     console.log('External API status:', externalRes.status);
