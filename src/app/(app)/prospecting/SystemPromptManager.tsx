@@ -1,12 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { db } from '@/lib/firebase/client';
 
 interface SystemPrompt {
-  id: string;
-  title: string;
-  prompt: string;
+  id?: string;                    // Document ID (auto-generated)
+  name: string;                   // Required: Display name for selection
+  prompt: string;                 // Required: The actual prompt content
+  description?: string;           // Optional: Brief description
+  createdAt: any;                // Required: Creation timestamp (Firestore Timestamp)
+  updatedAt: any;                // Required: Last update timestamp (Firestore Timestamp)
+  isDefault?: boolean;           // Optional: Set to true for fallback prompt
+  tags?: string[];               // Optional: For categorization
 }
 
 interface SystemPromptManagerProps {
@@ -16,7 +21,7 @@ interface SystemPromptManagerProps {
 export default function SystemPromptManager({ onPromptSelected }: SystemPromptManagerProps) {
   const [prompts, setPrompts] = useState<SystemPrompt[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
-  const [promptTitle, setPromptTitle] = useState<string>("");
+  const [promptName, setPromptName] = useState<string>("");
   const [promptText, setPromptText] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +49,7 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
     const id = e.target.value;
     setSelectedPromptId(id);
     const found = prompts.find(p => p.id === id);
-    setPromptTitle(found ? found.title : "");
+    setPromptName(found ? found.name : "");
     setPromptText(found ? found.prompt : "");
     setSuccess(null);
     setError(null);
@@ -58,8 +63,18 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
     setError(null);
     setSuccess(null);
     try {
-      const docRef = await addDoc(collection(db, 'systemPrompts'), { title: promptTitle, prompt: promptText });
-      setPromptTitle("");
+      const promptData = {
+        name: promptName,
+        prompt: promptText,
+        description: "", // Optional field, can be empty for now
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isDefault: false, // Optional field, default to false
+        tags: [] // Optional field, empty array for now
+      };
+      
+      const docRef = await addDoc(collection(db, 'systemPrompts'), promptData);
+      setPromptName("");
       setPromptText("");
       setSelectedPromptId("");
       setSuccess("Prompt saved!");
@@ -73,9 +88,9 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
 
   return (
     <div style={{ marginBottom: 32, border: '1px solid #ddd', borderRadius: 8, padding: 16 }}>
-      <h2>System Prompts</h2>
+      <h1><b>Prompts</b></h1>
       <div style={{ marginBottom: 12 }}>
-        <label htmlFor="promptDropdown">Saved Prompts:</label>
+        <label htmlFor="promptDropdown"></label>
         <select
           id="promptDropdown"
           value={selectedPromptId}
@@ -84,21 +99,21 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
         >
           <option value="">-- Select a prompt --</option>
           {prompts.map(p => (
-            <option key={p.id} value={p.id}>{p.title ? p.title : p.prompt.slice(0, 40) + (p.prompt.length > 40 ? "..." : "")}</option>
+            <option key={p.id} value={p.id}>{p.name ? p.name : p.prompt.slice(0, 40) + (p.prompt.length > 40 ? "..." : "")}</option>
           ))}
         </select>
       </div>
       <div style={{ marginBottom: 12 }}>
-        <label htmlFor="systemPromptTitle">Prompt Title:</label>
+        <label htmlFor="systemPromptName"><b>Prompt Name:</b></label>
         <input
-          id="systemPromptTitle"
+          id="systemPromptName"
           type="text"
           style={{ width: '100%', padding: 8, marginTop: 4, marginBottom: 8 }}
-          value={promptTitle}
-          onChange={e => setPromptTitle(e.target.value)}
-          placeholder="Enter a title for your system prompt..."
+          value={promptName}
+          onChange={e => setPromptName(e.target.value)}
+          placeholder="Enter a name for your prompt..."
         />
-        <label htmlFor="systemPromptText">System Prompt:</label>
+        <label htmlFor="systemPromptText"><b>Prompt Body:</b></label>
         <textarea
           id="systemPromptText"
           rows={4}
@@ -109,24 +124,26 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
             if (onPromptSelected) {
               onPromptSelected({
                 id: selectedPromptId,
-                title: promptTitle,
-                prompt: e.target.value
+                name: promptName,
+                prompt: e.target.value,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
               });
             }
           }}
-          placeholder="Enter or edit your system prompt here..."
+          placeholder="Enter or edit your prompt here..."
         />
       </div>
       <button
         onClick={async () => {
-          if (!promptTitle.trim() || !promptText.trim()) {
-            setError("Both title and prompt are required.");
+          if (!promptName.trim() || !promptText.trim()) {
+            setError("Both name and prompt are required.");
             setSuccess(null);
             return;
           }
           await handleSavePrompt();
         }}
-        disabled={loading || !promptTitle.trim() || !promptText.trim()}
+        disabled={loading || !promptName.trim() || !promptText.trim()}
         style={{ padding: '8px 16px', background: '#1c7c54', color: '#fff', border: 'none', borderRadius: 4 }}
       >
         {loading ? 'Saving...' : 'Save Prompt'}

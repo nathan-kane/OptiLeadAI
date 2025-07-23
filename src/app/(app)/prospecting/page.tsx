@@ -4,6 +4,18 @@ import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
 import SystemPromptManager from './SystemPromptManager';
 
+// Import the SystemPrompt interface
+interface SystemPrompt {
+  id?: string;
+  name: string;
+  prompt: string;
+  description?: string;
+  createdAt: any;
+  updatedAt: any;
+  isDefault?: boolean;
+  tags?: string[];
+}
+
 interface LeadList {
   id: string;
   name: string;
@@ -18,7 +30,7 @@ export default function ProspectingPage() {
   const [error, setError] = useState<string | null>(null);
   const [leadLists, setLeadLists] = useState<LeadList[]>([]);
   const [selectedLeadListId, setSelectedLeadListId] = useState<string>("");
-  const [selectedPrompt, setSelectedPrompt] = useState<{ id: string; title: string; prompt: string } | null>(null);
+  const [selectedPrompt, setSelectedPrompt] = useState<SystemPrompt | null>(null);
 
   // CSV upload state
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -134,10 +146,9 @@ export default function ProspectingPage() {
         const lead = leads[i];
         try {
           const requestBody = {
-            phone_number: lead.phone,
-            voice_id: selectedPrompt?.id || 'default-voice',
-            system_prompt: selectedPrompt?.prompt || undefined,
-            name: lead.firstName,
+            phoneNumber: lead.phone,
+            prospectName: lead.firstName,
+            promptId: selectedPrompt?.id || 'default-prompt',
           };
           console.log(`[Campaign] Calling ${lead.firstName} at ${lead.phone}:`, requestBody);
           
@@ -209,17 +220,14 @@ export default function ProspectingPage() {
     setSingleCallLoading(true);
     setSingleCallStatus(null);
     try {
-      console.log('[SingleCall] Using endpoint:', apiEndpoint);
-      const res = await fetch(apiEndpoint, {
+      console.log('[SingleCall] Using endpoint:', '/api/start-call');
+      const res = await fetch('/api/start-call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone_number: singlePhone.trim(),
-          voice_id: selectedPrompt.id,
-          system_prompt: selectedPrompt.prompt || undefined,
-          // Assuming you have a way to get the name for a single call, add it here
-          // For now, we'll just pass an empty string or a placeholder
-          name: '' 
+          phoneNumber: singlePhone.trim(),
+          prospectName: 'Test Prospect', 
+          promptId: selectedPrompt.id
         }),
       });
       let data;
