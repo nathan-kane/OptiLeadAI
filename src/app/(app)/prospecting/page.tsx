@@ -22,7 +22,7 @@ interface LeadList {
 }
 
 interface Lead {
-  firstName: string;
+  fullName: string;
   phone: string;
 }
 
@@ -69,10 +69,10 @@ export default function ProspectingPage() {
             return;
           }
           const parsedLeads: Lead[] = data.map((row: any) => {
-            const name = (row['FULL NAME'] || '').trim();
+            const fullName = (row['FULL NAME'] || '').trim();
             const phone = (row['PHONE'] || '').trim();
-            return { firstName: name.split(' ')[0] || '', phone };
-          }).filter((lead: Lead) => lead.firstName && lead.phone);
+            return { fullName, phone };
+          }).filter((lead: Lead) => lead.fullName && lead.phone);
           if (!parsedLeads.length) {
             setCsvError('No valid leads found. Ensure columns are named FULL NAME and PHONE.');
             return;
@@ -147,12 +147,18 @@ export default function ProspectingPage() {
         try {
           const requestBody = {
             phoneNumber: lead.phone,
-            prospectName: lead.firstName,
+            prospectName: lead.fullName,
             promptId: selectedPrompt?.id || 'default-prompt',
           };
-          console.log(`[Campaign] Calling ${lead.firstName} at ${lead.phone}:`, requestBody);
+          console.log(`[Campaign] Calling ${lead.fullName} at ${lead.phone}:`, requestBody);
           
-          const res = await fetch('/api/start-call', {
+          // DIRECT BACKEND CALL: Bypass broken Next.js API route and call backend directly with personalization
+          console.log('[Campaign] 🚨 CALLING BACKEND DIRECTLY for personalization');
+          const backendUrl = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
+          console.log('[Campaign] Backend URL:', backendUrl);
+          console.log('[Campaign] Request body with personalization:', requestBody);
+          
+          const res = await fetch(backendUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody),
@@ -164,27 +170,27 @@ export default function ProspectingPage() {
             data = await res.json();
           } catch (jsonErr) {
             console.error(`[Campaign] Failed to parse JSON response:`, jsonErr);
-            setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): Invalid response format`);
+            setCampaignStatus(`Failed to call ${lead.fullName} (${lead.phone}): Invalid response format`);
             break;
           }
           
           console.log(`[Campaign] Response data:`, data);
           
           if (!res.ok || !data.success) {
-            setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): ${data.message || `HTTP ${res.status}`}`);
+            setCampaignStatus(`Failed to call ${lead.fullName} (${lead.phone}): ${data.message || `HTTP ${res.status}`}`);
             break;
           }
           
-          setCampaignStatus(`Call started for ${lead.firstName} (${lead.phone}). Waiting for completion...`);
+          setCampaignStatus(`Call started for ${lead.fullName} (${lead.phone}). Waiting for completion...`);
           
           // Wait for call completion via SSE before proceeding to next call
           await waitForCallCompletion(lead.phone);
           
-          setCampaignStatus(`Call completed for ${lead.firstName} (${lead.phone}).`);
+          setCampaignStatus(`Call completed for ${lead.fullName} (${lead.phone}).`);
           
         } catch (err: any) {
           console.error(`[Campaign] Network/fetch error:`, err);
-          setCampaignStatus(`Error calling ${lead.firstName}: ${err.message}`);
+          setCampaignStatus(`Error calling ${lead.fullName}: ${err.message}`);
           break;
         }
       }
@@ -220,15 +226,21 @@ export default function ProspectingPage() {
     setSingleCallLoading(true);
     setSingleCallStatus(null);
     try {
-      console.log('[SingleCall] Using endpoint:', '/api/start-call');
-      const res = await fetch('/api/start-call', {
+      // DIRECT BACKEND CALL: Bypass broken Next.js API route and call backend directly with personalization
+      console.log('[SingleCall] 🚨 CALLING BACKEND DIRECTLY for personalization');
+      const backendUrl = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
+      console.log('[SingleCall] Backend URL:', backendUrl);
+      const requestBody = {
+        phoneNumber: singlePhone.trim(),
+        prospectName: 'Test Prospect', 
+        promptId: selectedPrompt.id
+      };
+      console.log('[SingleCall] Request body with personalization:', requestBody);
+      
+      const res = await fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: singlePhone.trim(),
-          prospectName: 'Test Prospect', 
-          promptId: selectedPrompt.id
-        }),
+        body: JSON.stringify(requestBody),
       });
       let data;
       try {
@@ -293,14 +305,14 @@ export default function ProspectingPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
               <thead>
                 <tr style={{ background: '#f7f7f7' }}>
-                  <th style={{ border: '1px solid #ddd', padding: 6 }}>First Name</th>
+                  <th style={{ border: '1px solid #ddd', padding: 6 }}>Full Name</th>
                   <th style={{ border: '1px solid #ddd', padding: 6 }}>Phone</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.slice(0, 10).map((lead, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.firstName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.fullName}</td>
                     <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.phone}</td>
                   </tr>
                 ))}
