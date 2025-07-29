@@ -12,6 +12,7 @@ interface LeadList {
 interface Lead {
   firstName: string;
   phone: string;
+  fullName?: string; // Optional full name for better personalization
 }
 
 export default function ProspectingPage() {
@@ -26,6 +27,7 @@ export default function ProspectingPage() {
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
   const [singlePhone, setSinglePhone] = useState<string>("");
+  const [singleProspectName, setSingleProspectName] = useState<string>("");
   const [singleCallLoading, setSingleCallLoading] = useState(false);
   const [singleCallStatus, setSingleCallStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,12 +59,36 @@ export default function ProspectingPage() {
             return;
           }
           const parsedLeads: Lead[] = data.map((row: any) => {
-            const name = (row.Name || '').trim();
-            const phone = (row.Phone || '').trim();
-            return { firstName: name.split(' ')[0] || '', phone };
-          }).filter((lead: Lead) => lead.firstName && lead.phone);
+            // Flexible column name matching (case-insensitive)
+            const rowKeys = Object.keys(row);
+            
+            // Find name column (supports: Name, name, full_name, first_name, Full Name, etc.)
+            const nameKey = rowKeys.find(key => 
+              key.toLowerCase().trim().match(/^(name|full_name|first_name|fullname|firstname)$/)
+            );
+            
+            // Find phone column (supports: Phone, phone, phone_number, telephone, mobile, etc.)
+            const phoneKey = rowKeys.find(key => 
+              key.toLowerCase().trim().match(/^(phone|phone_number|telephone|mobile|cell|phonenumber)$/)
+            );
+            
+            const fullName = nameKey ? (row[nameKey] || '').trim() : '';
+            const phone = phoneKey ? (row[phoneKey] || '').trim() : '';
+            
+            // Extract first name from full name, but keep full name for personalization
+            const firstName = fullName.split(' ')[0] || '';
+            
+            return { 
+              firstName: firstName,
+              phone: phone,
+              fullName: fullName // Add full name for better personalization
+            };
+          }).filter((lead: any) => lead.firstName && lead.phone);
+          
           if (!parsedLeads.length) {
-            setCsvError('No valid leads found. Ensure columns are named Name and Phone.');
+            // Get available column names for better error message
+            const availableColumns = data.length > 0 ? Object.keys(data[0]).join(', ') : 'none';
+            setCsvError(`No valid leads found. Available columns: ${availableColumns}. Expected columns like 'Name' and 'Phone' (case-insensitive).`);
             return;
           }
           setLeads(parsedLeads);
@@ -88,19 +114,19 @@ export default function ProspectingPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone_number: lead.phone,
-            voice_id: selectedPrompt.id,
-            system_prompt: selectedPrompt.prompt || undefined,
+            phoneNumber: lead.phone,
+            prospectName: lead.fullName || lead.firstName, // Use full name if available, fallback to first name
+            promptId: selectedPrompt.id,
           }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
-          setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): ${data.message}`);
+          setCampaignStatus(`Failed to call ${lead.fullName || lead.firstName} (${lead.phone}): ${data.message}`);
           break;
         }
-        setCampaignStatus(`Called ${lead.firstName} (${lead.phone}) successfully.`);
+        setCampaignStatus(`Called ${lead.fullName || lead.firstName} (${lead.phone}) successfully.`);
       } catch (err: any) {
-        setCampaignStatus(`Error calling ${lead.firstName}: ${err.message}`);
+        setCampaignStatus(`Error calling ${lead.fullName || lead.firstName}: ${err.message}`);
         break;
       }
       // Wait 3-5 seconds between calls
@@ -128,6 +154,10 @@ export default function ProspectingPage() {
       setSingleCallStatus('Please enter a phone number.');
       return;
     }
+    if (!singleProspectName.trim()) {
+      setSingleCallStatus('Please enter a prospect name.');
+      return;
+    }
     if (!isValidE164(singlePhone.trim())) {
       setSingleCallStatus('Please enter a valid phone number in E.164 format (e.g., +15555555555)');
       return;
@@ -140,9 +170,9 @@ export default function ProspectingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone_number: singlePhone.trim(),
-          voice_id: selectedPrompt.id,
-          system_prompt: selectedPrompt.prompt || undefined,
+          phoneNumber: singlePhone.trim(),
+          prospectName: singleProspectName.trim(),
+          promptId: selectedPrompt.id,
         }),
       });
       let data;
@@ -179,15 +209,22 @@ export default function ProspectingPage() {
       </div>
         <input
           type="text"
-          placeholder="Enter phone number"
+          placeholder="Enter phone number (e.g., +15555555555)"
           value={singlePhone}
           onChange={e => setSinglePhone(e.target.value)}
-          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc', width: 200 }}
+        />
+        <input
+          type="text"
+          placeholder="Enter prospect name (e.g., John Smith)"
+          value={singleProspectName}
+          onChange={e => setSingleProspectName(e.target.value)}
+          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc', width: 200 }}
         />
         <button
           onClick={handleSingleCall}
-          disabled={singleCallLoading || !selectedPrompt?.id || !singlePhone.trim()}
-          style={{ padding: '8px 18px', background: (!selectedPrompt?.id || !singlePhone.trim()) ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
+          disabled={singleCallLoading || !selectedPrompt?.id || !singlePhone.trim() || !singleProspectName.trim()}
+          style={{ padding: '8px 18px', background: (!selectedPrompt?.id || !singlePhone.trim() || !singleProspectName.trim()) ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
         >
           {singleCallLoading ? 'Calling...' : 'Call Now'}
         </button>
@@ -226,14 +263,14 @@ export default function ProspectingPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
               <thead>
                 <tr style={{ background: '#f7f7f7' }}>
-                  <th style={{ border: '1px solid #ddd', padding: 6 }}>First Name</th>
+                  <th style={{ border: '1px solid #ddd', padding: 6 }}>Full Name</th>
                   <th style={{ border: '1px solid #ddd', padding: 6 }}>Phone</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.slice(0, 10).map((lead, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.firstName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.fullName || lead.firstName}</td>
                     <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.phone}</td>
                   </tr>
                 ))}

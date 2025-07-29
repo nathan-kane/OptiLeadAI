@@ -126,7 +126,7 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
           }
           await handleSavePrompt();
         }}
-        disabled={loading || !promptTitle.trim() || !promptText.trim()}
+        disabled={loading || !promptTitle?.trim() || !promptText?.trim()}
         style={{ padding: '8px 16px', background: '#1c7c54', color: '#fff', border: 'none', borderRadius: 4 }}
       >
         {loading ? 'Saving...' : 'Save Prompt'}
