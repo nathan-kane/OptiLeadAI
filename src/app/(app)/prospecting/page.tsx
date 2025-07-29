@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
 import SystemPromptManager from './SystemPromptManager';
+import { Lead } from '../../../types/Lead';
 
 // Import the SystemPrompt interface
 interface SystemPrompt {
@@ -21,11 +22,7 @@ interface LeadList {
   name: string;
 }
 
-interface Lead {
-  fullName: string;
-  phone: string;
-  fullName?: string; // Optional full name for better personalization
-}
+
 
 export default function ProspectingPage() {
   const [error, setError] = useState<string | null>(null);
@@ -117,12 +114,10 @@ export default function ProspectingPage() {
         setCampaignStatus(`Error calling ${lead.firstName}: ${err.message}`);
         break;
       }
-    } finally {
-      // Clean up SSE connection
-      eventSource.close();
-      setCampaignLoading(false);
-      setCampaignStatus('Campaign completed.');
     }
+    // Clean up after campaign completes
+    setCampaignLoading(false);
+    setCampaignStatus('Campaign completed.');
   };
 
   // Handler for single outbound call
@@ -250,7 +245,7 @@ export default function ProspectingPage() {
               <tbody>
                 {leads.slice(0, 10).map((lead, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.fullName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.firstName}</td>
                     <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.phone}</td>
                   </tr>
                 ))}
