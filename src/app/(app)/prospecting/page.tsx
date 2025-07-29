@@ -37,9 +37,6 @@ export default function ProspectingPage() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
-  const [singlePhone, setSinglePhone] = useState<string>("");
-  const [singleCallLoading, setSingleCallLoading] = useState(false);
-  const [singleCallStatus, setSingleCallStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -202,91 +199,16 @@ export default function ProspectingPage() {
     }
   };
 
-  // Handler for single outbound call
-  function isValidE164(phone: string) {
-    return /^\+\d{10,15}$/.test(phone);
-  }
 
-  // Determine the endpoint used for the call
-  const apiEndpoint = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
 
-  const handleSingleCall = async () => {
-    if (!selectedPrompt?.id) {
-      setSingleCallStatus('Please select a script before calling.');
-      return;
-    }
-    if (!singlePhone.trim()) {
-      setSingleCallStatus('Please enter a phone number.');
-      return;
-    }
-    if (!isValidE164(singlePhone.trim())) {
-      setSingleCallStatus('Please enter a valid phone number in E.164 format (e.g., +15555555555)');
-      return;
-    }
-    setSingleCallLoading(true);
-    setSingleCallStatus(null);
-    try {
-      // DIRECT BACKEND CALL: Bypass broken Next.js API route and call backend directly with personalization
-      console.log('[SingleCall] 🚨 CALLING BACKEND DIRECTLY for personalization');
-      const backendUrl = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
-      console.log('[SingleCall] Backend URL:', backendUrl);
-      const requestBody = {
-        phoneNumber: singlePhone.trim(),
-        prospectName: 'Test Prospect', 
-        promptId: selectedPrompt.id
-      };
-      console.log('[SingleCall] Request body with personalization:', requestBody);
-      
-      const res = await fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-      let data;
-      try {
-        data = await res.clone().json();
-      } catch {
-        const text = await res.text();
-        setSingleCallStatus(`Backend did not return JSON. Raw response: ${text}`);
-        setSingleCallLoading(false);
-        return;
-      }
-      console.log('[SingleCall] Backend response:', data);
-      if (!res.ok || !data.success) {
-        setSingleCallStatus(`Failed to call ${singlePhone}: ${data.message || 'Unknown error'}`);
-      } else {
-        setSingleCallStatus(`Called ${singlePhone} successfully.`);
-      }
-    } catch (err: any) {
-      setSingleCallStatus(`Error calling ${singlePhone}: ${err.message}`);
-    }
-    setSingleCallLoading(false);
-  };
+
 
   return (
     <div style={{ maxWidth: 700, margin: "2rem auto", padding: 24, border: "1px solid #eee", borderRadius: 10 }}>
       <SystemPromptManager onPromptSelected={setSelectedPrompt} />
       <h1>Prospecting Campaigns</h1>
 
-      {/* Single Call UI */}
-      <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
-        <h2>Single Outbound Call</h2>
-        <input
-          type="text"
-          placeholder="Enter phone number"
-          value={singlePhone}
-          onChange={e => setSinglePhone(e.target.value)}
-          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-        />
-        <button
-          onClick={handleSingleCall}
-          disabled={singleCallLoading || !selectedPrompt?.id || !singlePhone.trim()}
-          style={{ padding: '8px 18px', background: (!selectedPrompt?.id || !singlePhone.trim()) ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
-        >
-          {singleCallLoading ? 'Calling...' : 'Call Now'}
-        </button>
-        {singleCallStatus && <div style={{ marginTop: 12 }}>{singleCallStatus}</div>}
-      </div>
+
 
       {/* CSV Upload & Preview */}
       <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
