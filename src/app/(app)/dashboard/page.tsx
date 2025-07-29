@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Lead } from '@/types';
@@ -73,9 +72,9 @@ export default function DashboardPage() {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log("DashboardPage: User authenticated. Setting up Firestore listener.");
-        const leadsQuery = query(collection(db, "leads"), orderBy("score", "desc"));
+        const leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"));
         const unsubscribeSnapshot = onSnapshot(leadsQuery, (snapshot) => {
-          const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+          const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
           setLeads(leadsData);
           setIsLoading(false);
         }, (error) => {
@@ -130,48 +129,49 @@ export default function DashboardPage() {
             <Table className="min-w-[700px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px] text-xs sm:text-sm">Score</TableHead>
                   <TableHead className="text-xs sm:text-sm">Name</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Company</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Priority</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Phone</TableHead>
                   <TableHead className="text-xs sm:text-sm">Status</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Data</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Last Interaction</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Timeline</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Location</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Budget</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Quality</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Next Step</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Created Date</TableHead>
                   <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center h-24">Loading...</TableCell>
+                    <TableCell colSpan={10} className="text-center h-24">Loading...</TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center h-24">
-                      No leads found. Add one to get started!
+                    <TableCell colSpan={10} className="text-center h-24">
+                      No leads found. Start making calls to see leads here!
                     </TableCell>
                   </TableRow>
                 ) : (
-                  leads.map((lead) => (
+                  leads.map((lead: any) => (
                     <TableRow key={lead.id} className="text-xs sm:text-sm">
-                      <TableCell className="font-medium">{lead.score}</TableCell>
-                      <TableCell>{lead.name}</TableCell>
-                      <TableCell>{lead.company}</TableCell>
+                      <TableCell className="font-medium">{lead.fullName || 'N/A'}</TableCell>
+                      <TableCell>{lead.phoneNumber || 'N/A'}</TableCell>
                       <TableCell>
-                        <Badge variant={getPriorityBadgeVariant(lead.priority)}>{lead.priority}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={getStatusBadgeVariant(lead.status)}
-                          className={getStatusColorClass(lead.status) || (lead.status === 'Qualified' ? 'bg-accent text-accent-foreground hover:bg-accent/80' : '')}
-                        >
-                          {lead.status}
+                        <Badge variant={lead.status === 'Buyer' ? 'default' : lead.status === 'Seller' ? 'secondary' : 'outline'}>
+                          {lead.status || 'Unknown'}
                         </Badge>
                       </TableCell>
+                      <TableCell>{lead.timeline || 'N/A'}</TableCell>
+                      <TableCell>{lead.location || 'N/A'}</TableCell>
+                      <TableCell>{lead.budget || 'N/A'}</TableCell>
                       <TableCell>
-                        <DataValidationIcon status={lead.dataValidationStatus} />
+                        <Badge variant={lead.leadQuality === 'High' ? 'destructive' : lead.leadQuality === 'Medium' ? 'default' : 'secondary'}>
+                          {lead.leadQuality || 'N/A'}
+                        </Badge>
                       </TableCell>
-                      <TableCell>{lead.lastInteraction}</TableCell>
+                      <TableCell>{lead.nextStep || 'N/A'}</TableCell>
+                      <TableCell>{lead.createdAt ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.name}`)}>
+                            <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.fullName}`)}>
                               <Eye className="mr-2 h-4 w-4" /> View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleNotifySales(lead)}>
