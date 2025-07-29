@@ -250,7 +250,7 @@ export default function ProspectingPage() {
               <tbody>
                 {leads.slice(0, 10).map((lead, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.firstName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.fullName}</td>
                     <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.phone}</td>
                   </tr>
                 ))}
