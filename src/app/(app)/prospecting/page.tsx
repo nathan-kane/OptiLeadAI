@@ -67,17 +67,38 @@ export default function ProspectingPage() {
             setCsvError('CSV is empty or invalid.');
             return;
           }
+          
+          // Debug: log the first row to see column names
+          console.log('CSV Headers:', Object.keys(data[0] || {}));
+          console.log('First row:', data[0]);
+          
           const parsedLeads: Lead[] = data.map((row: any) => {
-            const name = (row.Name || '').trim();
-            const phone = (row.Phone || '').trim();
-            return { firstName: name.split(' ')[0] || '', phone };
+            // Try different possible column name variations
+            const nameField = row.Name || row.name || row.NAME || 
+                             row['Full Name'] || row['full name'] || 
+                             row.firstName || row.FirstName || 
+                             row['First Name'] || row['first name'] || '';
+            const phoneField = row.Phone || row.phone || row.PHONE || 
+                              row['Phone Number'] || row['phone number'] || 
+                              row.phoneNumber || row.PhoneNumber || '';
+            
+            const name = String(nameField).trim();
+            const phone = String(phoneField).trim();
+            
+            return { 
+              firstName: name.split(' ')[0] || name || '', 
+              fullName: name || '',
+              phone: phone 
+            };
           }).filter((lead: Lead) => lead.firstName && lead.phone);
+          
           if (!parsedLeads.length) {
-            setCsvError('No valid leads found. Ensure columns are named Name and Phone.');
+            setCsvError(`No valid leads found. Found columns: ${Object.keys(data[0] || {}).join(', ')}. Expected: Name/name and Phone/phone columns.`);
             return;
           }
           setLeads(parsedLeads);
-        } catch {
+        } catch (error) {
+          console.error('CSV parsing error:', error);
           setCsvError('Failed to parse CSV.');
         }
       },
@@ -95,23 +116,26 @@ export default function ProspectingPage() {
     for (let i = 0; i < leads.length; i++) {
       const lead = leads[i];
       try {
-        const res = await fetch('/api/start-call', {
+        const res = await fetch('https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone_number: lead.phone,
-            voice_id: selectedPrompt.id,
-            system_prompt: selectedPrompt.prompt || undefined,
+            phoneNumber: lead.phone,
+            prospectName: lead.fullName,
+            promptId: selectedPrompt.id,
           }),
         });
         const data = await res.json();
+        console.log('API Response Status:', res.status);
+        console.log('API Response Data:', JSON.stringify(data, null, 2));
         if (!res.ok || !data.success) {
-          setCampaignStatus(`Failed to call ${lead.firstName} (${lead.phone}): ${data.message}`);
+          const errorMsg = data.message || data.error || 'Unknown error';
+          setCampaignStatus(`Failed to call ${lead.fullName} (${lead.phone}): ${errorMsg}`);
           break;
         }
-        setCampaignStatus(`Called ${lead.firstName} (${lead.phone}) successfully.`);
+        setCampaignStatus(`Called ${lead.fullName} (${lead.phone}) successfully.`);
       } catch (err: any) {
-        setCampaignStatus(`Error calling ${lead.firstName}: ${err.message}`);
+        setCampaignStatus(`Error calling ${lead.fullName}: ${err.message}`);
         break;
       }
     }
@@ -159,13 +183,13 @@ export default function ProspectingPage() {
       };
       console.log('[SingleCall] Request body with personalization:', requestBody);
       
-      const res = await fetch(backendUrl, {
+      const res = await fetch('https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone_number: singlePhone.trim(),
-          voice_id: selectedPrompt.id,
-          system_prompt: selectedPrompt.prompt || undefined,
+          phoneNumber: singlePhone.trim(),
+          prospectName: singleProspectName.trim(),
+          promptId: selectedPrompt.id,
         }),
       });
       let data;
@@ -245,7 +269,7 @@ export default function ProspectingPage() {
               <tbody>
                 {leads.slice(0, 10).map((lead, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.firstName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.fullName}</td>
                     <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.phone}</td>
                   </tr>
                 ))}
