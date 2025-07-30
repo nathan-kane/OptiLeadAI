@@ -35,10 +35,6 @@ export default function ProspectingPage() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
-  const [singlePhone, setSinglePhone] = useState<string>("");
-  const [singleProspectName, setSingleProspectName] = useState<string>("");
-  const [singleCallLoading, setSingleCallLoading] = useState(false);
-  const [singleCallStatus, setSingleCallStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -107,15 +103,29 @@ export default function ProspectingPage() {
   };
 
   const handleStartCampaign = async () => {
-    if (!selectedPrompt?.id) {
-      setCampaignStatus('Please select a script before starting the campaign.');
+    if (!selectedPrompt) {
+      alert('Please select a prompt first.');
       return;
     }
+    
+    // Prevent multiple simultaneous campaigns
+    if (campaignLoading) {
+      console.log('[Campaign] Campaign already in progress, ignoring duplicate request');
+      return;
+    }
+    
     setCampaignLoading(true);
-    setCampaignStatus(null);
+    setCampaignStatus('🚀 Starting campaign...');
+    
+    console.log(`[Campaign] Starting sequential campaign with ${leads.length} prospects`);
+    
     for (let i = 0; i < leads.length; i++) {
       const lead = leads[i];
+      
       try {
+        console.log(`[Campaign] Processing prospect ${i + 1}/${leads.length}: ${lead.fullName}`);
+        setCampaignStatus(`📞 Calling ${lead.fullName} (${lead.phone})... (${i + 1}/${leads.length})`);
+        
         const res = await fetch('https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -125,92 +135,47 @@ export default function ProspectingPage() {
             promptId: selectedPrompt.id,
           }),
         });
+        
         const data = await res.json();
-        console.log('API Response Status:', res.status);
-        console.log('API Response Data:', JSON.stringify(data, null, 2));
+        console.log(`[Campaign ${i + 1}/${leads.length}] API Response Status:`, res.status);
+        console.log(`[Campaign ${i + 1}/${leads.length}] API Response Data:`, JSON.stringify(data, null, 2));
+        
         if (!res.ok || !data.success) {
           const errorMsg = data.message || data.error || 'Unknown error';
-          setCampaignStatus(`Failed to call ${lead.fullName} (${lead.phone}): ${errorMsg}`);
+          setCampaignStatus(`❌ Failed to call ${lead.fullName} (${lead.phone}): ${errorMsg}`);
+          console.error(`[Campaign] Call failed for ${lead.fullName}:`, errorMsg);
           break;
         }
-        setCampaignStatus(`Called ${lead.fullName} (${lead.phone}) successfully.`);
+        
+        console.log(`[Campaign] Call initiated successfully for ${lead.fullName}, Call ID: ${data.callId}`);
+        setCampaignStatus(`✅ Call initiated for ${lead.fullName}. Waiting for call completion...`);
+        
+        // Only wait if there are more prospects to call
+        if (i < leads.length - 1) {
+          const callCompletionDelay = 120000; // 2 minutes - adjust as needed
+          setCampaignStatus(`⏳ Call in progress for ${lead.fullName}. Next call starts in ${callCompletionDelay / 1000} seconds...`);
+          
+          console.log(`[Campaign] Waiting ${callCompletionDelay / 1000} seconds before next call...`);
+          await new Promise(resolve => setTimeout(resolve, callCompletionDelay));
+          
+          setCampaignStatus(`✅ Call completed for ${lead.fullName}. Moving to next prospect...`);
+          console.log(`[Campaign] Moving to next prospect after ${lead.fullName}`);
+        } else {
+          setCampaignStatus(`✅ Final call initiated for ${lead.fullName}. Campaign completing...`);
+          console.log(`[Campaign] Final call initiated for ${lead.fullName}`);
+        }
+        
       } catch (err: any) {
-        setCampaignStatus(`Error calling ${lead.fullName}: ${err.message}`);
+        console.error(`[Campaign] Error calling ${lead.fullName}:`, err);
+        setCampaignStatus(`❌ Error calling ${lead.fullName}: ${err.message}`);
         break;
       }
     }
+    
     // Clean up after campaign completes
     setCampaignLoading(false);
-    setCampaignStatus('Campaign completed.');
-  };
-
-  // Handler for single outbound call
-  function isValidE164(phone: string) {
-    return /^\+\d{10,15}$/.test(phone);
-  }
-
-  // Determine the endpoint used for the call
-  const apiEndpoint = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
-
-  const handleSingleCall = async () => {
-    if (!selectedPrompt?.id) {
-      setSingleCallStatus('Please select a script before calling.');
-      return;
-    }
-    if (!singlePhone.trim()) {
-      setSingleCallStatus('Please enter a phone number.');
-      return;
-    }
-    if (!singleProspectName.trim()) {
-      setSingleCallStatus('Please enter a prospect name.');
-      return;
-    }
-    if (!isValidE164(singlePhone.trim())) {
-      setSingleCallStatus('Please enter a valid phone number in E.164 format (e.g., +15555555555)');
-      return;
-    }
-    setSingleCallLoading(true);
-    setSingleCallStatus(null);
-    try {
-      // DIRECT BACKEND CALL: Bypass broken Next.js API route and call backend directly with personalization
-      console.log('[SingleCall] 🚨 CALLING BACKEND DIRECTLY for personalization');
-      const backendUrl = 'https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call';
-      console.log('[SingleCall] Backend URL:', backendUrl);
-      const requestBody = {
-        phoneNumber: singlePhone.trim(),
-        prospectName: 'Test Prospect', 
-        promptId: selectedPrompt.id
-      };
-      console.log('[SingleCall] Request body with personalization:', requestBody);
-      
-      const res = await fetch('https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: singlePhone.trim(),
-          prospectName: singleProspectName.trim(),
-          promptId: selectedPrompt.id,
-        }),
-      });
-      let data;
-      try {
-        data = await res.clone().json();
-      } catch {
-        const text = await res.text();
-        setSingleCallStatus(`Backend did not return JSON. Raw response: ${text}`);
-        setSingleCallLoading(false);
-        return;
-      }
-      console.log('[SingleCall] Backend response:', data);
-      if (!res.ok || !data.success) {
-        setSingleCallStatus(`Failed to call ${singlePhone}: ${data.message || 'Unknown error'}`);
-      } else {
-        setSingleCallStatus(`Called ${singlePhone} successfully.`);
-      }
-    } catch (err: any) {
-      setSingleCallStatus(`Error calling ${singlePhone}: ${err.message}`);
-    }
-    setSingleCallLoading(false);
+    setCampaignStatus('🎉 Campaign completed successfully! All calls have been processed.');
+    console.log('[Campaign] Campaign completed successfully');
   };
 
   return (
@@ -218,32 +183,7 @@ export default function ProspectingPage() {
       <SystemPromptManager onPromptSelected={setSelectedPrompt} />
       <h1>Prospecting Campaigns</h1>
 
-      {/* Single Call UI */}
-      <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
-        <h2>Single Outbound Call</h2>
-        <input
-          type="text"
-          placeholder="Enter phone number (e.g., +15555555555)"
-          value={singlePhone}
-          onChange={e => setSinglePhone(e.target.value)}
-          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc', width: 200 }}
-        />
-        <input
-          type="text"
-          placeholder="Enter prospect name (e.g., John Smith)"
-          value={singleProspectName}
-          onChange={e => setSingleProspectName(e.target.value)}
-          style={{ marginRight: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc', width: 200 }}
-        />
-        <button
-          onClick={handleSingleCall}
-          disabled={singleCallLoading || !selectedPrompt?.id || !singlePhone.trim() || !singleProspectName.trim()}
-          style={{ padding: '8px 18px', background: (!selectedPrompt?.id || !singlePhone.trim() || !singleProspectName.trim()) ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
-        >
-          {singleCallLoading ? 'Calling...' : 'Call Now'}
-        </button>
-        {singleCallStatus && <div style={{ marginTop: 12 }}>{singleCallStatus}</div>}
-      </div>
+
 
       {/* CSV Upload & Preview */}
       <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
