@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";;
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase/client"; // Assuming auth is exported from utils.ts
+import { auth, db } from "@/lib/firebase/client"; // Assuming auth is exported from utils.ts
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { DEFAULT_PROMPT_CONFIG } from "@/config/default-prompt";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 
@@ -49,6 +51,16 @@ export default function SignupPage() {
 
             try {
               const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+              
+              // Create default prompt document in Firestore
+              await setDoc(doc(db, 'users', userCredential.user.uid, 'prompts', 'default'), {
+                title: DEFAULT_PROMPT_CONFIG.title,
+                content: DEFAULT_PROMPT_CONFIG.content,
+                isDefault: DEFAULT_PROMPT_CONFIG.isDefault,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+              
               // Send email verification with continue URL pointing to /verify-email
               // Ensure your domain here is correct for your environment
               const continueUrl = `${window.location.origin}/verify-email`;
