@@ -11,9 +11,12 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { storage } from "@/lib/storage";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUserId } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -72,7 +75,17 @@ export default function LoginPage() {
     try {
       console.log("LoginPage: Attempting Firebase signInWithEmailAndPassword...");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("LoginPage: Firebase signInWithEmailAndPassword successful. User:", userCredential.user.uid);
+      const user = userCredential.user;
+      console.log("LoginPage: Firebase signInWithEmailAndPassword successful. User:", user.uid);
+      
+      // Store userId in localStorage and context
+      setUserId(user.uid);
+      storage.setUserId(user.uid);
+      if (user.email) {
+        storage.setUserEmail(user.email);
+      }
+      console.log("LoginPage: UserId stored successfully:", user.uid);
+      
       // Explicitly redirect after successful sign-in
       console.log("LoginPage: handleLogin - Attempting explicit redirect to /dashboard");
       // onAuthStateChanged will also pick this up, but direct navigation can be faster for UI.

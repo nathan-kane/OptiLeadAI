@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { db } from '@/lib/firebase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SystemPrompt {
   id?: string;                    // Document ID (auto-generated)
-  name: string;                   // Required: Display name for selection
+  title: string;                  // Required: Display name for selection
   prompt: string;                 // Required: The actual prompt content
   description?: string;           // Optional: Brief description
   createdAt: any;                // Required: Creation timestamp (Firestore Timestamp)
@@ -19,6 +20,7 @@ interface SystemPromptManagerProps {
 }
 
 export default function SystemPromptManager({ onPromptSelected }: SystemPromptManagerProps) {
+  const { userId } = useAuth();
   const [prompts, setPrompts] = useState<SystemPrompt[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [promptName, setPromptName] = useState<string>("");
@@ -28,18 +30,28 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPrompts();
-  }, []);
+    // Only fetch prompts when userId is available
+    if (userId) {
+      fetchPrompts();
+    }
+  }, [userId]); // Re-run when userId changes
 
   async function fetchPrompts() {
+    if (!userId) {
+      setError("User not authenticated");
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
-      const querySnapshot = await getDocs(collection(db, 'systemPrompts'));
+      // Fetch prompts from user-scoped collection: users/{userId}/prompts
+      const querySnapshot = await getDocs(collection(db, 'users', userId, 'prompts'));
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPrompts(data as SystemPrompt[]);
     } catch (err) {
       setError("Failed to load prompts");
+      console.error('Error fetching user prompts:', err);
     } finally {
       setLoading(false);
     }
@@ -49,8 +61,10 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
     const id = e.target.value;
     setSelectedPromptId(id);
     const found = prompts.find(p => p.id === id);
-    setPromptName(found ? found.name : "");
-    setPromptText(found ? found.prompt : "");
+    setPromptName(found ? found.title : "");
+    // Handle backward compatibility: check for both 'prompt' (new) and 'content' (old) fields
+    const promptContent = found ? (found.prompt || (found as any).content || "") : "";
+    setPromptText(promptContent);
     setSuccess(null);
     setError(null);
     if (onPromptSelected) {
@@ -59,12 +73,17 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
   }
 
   async function handleSavePrompt() {
+    if (!userId) {
+      setError("User not authenticated");
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     setSuccess(null);
     try {
       const promptData = {
-        name: promptName,
+        title: promptName,
         prompt: promptText,
         description: "", // Optional field, can be empty for now
         createdAt: serverTimestamp(),
@@ -73,14 +92,18 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
         tags: [] // Optional field, empty array for now
       };
       
-      const docRef = await addDoc(collection(db, 'systemPrompts'), promptData);
+      // Save to user-scoped collection: users/{userId}/prompts
+      const docRef = await addDoc(collection(db, 'users', userId, 'prompts'), promptData);
+      console.log('Prompt saved successfully for user:', userId, 'Document ID:', docRef.id);
+      
       setPromptName("");
       setPromptText("");
       setSelectedPromptId("");
-      setSuccess("Prompt saved!");
+      setSuccess("Prompt saved successfully!");
       await fetchPrompts();
     } catch (err) {
       setError("Failed to save prompt");
+      console.error('Error saving prompt for user:', userId, err);
     } finally {
       setLoading(false);
     }
@@ -99,7 +122,9 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
         >
           <option value="">-- Select a prompt --</option>
           {prompts.map(p => (
-            <option key={p.id} value={p.id}>{p.name ? p.name : p.prompt.slice(0, 40) + (p.prompt.length > 40 ? "..." : "")}</option>
+            <option key={p.id} value={p.id}>
+              {p.title ? p.title : ((p.prompt || (p as any).content) ? (p.prompt || (p as any).content).slice(0, 40) + ((p.prompt || (p as any).content).length > 40 ? "..." : "") : "Untitled Prompt")}
+            </option>
           ))}
         </select>
       </div>
@@ -124,7 +149,7 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
             if (onPromptSelected) {
               onPromptSelected({
                 id: selectedPromptId,
-                name: promptName,
+                title: promptName,
                 prompt: e.target.value,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
@@ -136,14 +161,14 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
       </div>
       <button
         onClick={async () => {
-          if (!promptName.trim() || !promptText.trim()) {
+          if (!promptName?.trim() || !promptText?.trim()) {
             setError("Both name and prompt are required.");
             setSuccess(null);
             return;
           }
           await handleSavePrompt();
         }}
-        disabled={loading || !promptName.trim() || !promptText.trim()}
+        disabled={loading || !promptName?.trim() || !promptText?.trim()}
         style={{ padding: '8px 16px', background: '#1c7c54', color: '#fff', border: 'none', borderRadius: 4 }}
       >
         {loading ? 'Saving...' : 'Save Prompt'}

@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
 import SystemPromptManager from './SystemPromptManager';
 import { Lead } from '../../../types/Lead';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // Import the SystemPrompt interface
 interface SystemPrompt {
   id?: string;
-  name: string;
+  title: string;
   prompt: string;
   description?: string;
   createdAt: any;
@@ -25,6 +26,7 @@ interface LeadList {
 
 
 export default function ProspectingPage() {
+  const { userId } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [leadLists, setLeadLists] = useState<LeadList[]>([]);
   const [selectedLeadListId, setSelectedLeadListId] = useState<string>("");
@@ -128,7 +130,10 @@ export default function ProspectingPage() {
         
         const res = await fetch('https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-ID': userId || ''
+          },
           body: JSON.stringify({
             phoneNumber: lead.phone,
             prospectName: lead.fullName,

@@ -10,10 +10,10 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from 'react';
-import { auth, db } from '@/lib/firebase/client';
-import { onAuthStateChanged } from 'firebase/auth';
+import { db } from '@/lib/firebase/client';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { AddLeadForm } from '@/components/add-lead-form';
+import { useAuth } from '@/contexts/AuthContext';
 
 const getPriorityBadgeVariant = (priority: Lead['priority']) => {
   switch (priority) {
@@ -65,32 +65,48 @@ const DataValidationIcon = ({ status }: { status: Lead['dataValidationStatus']})
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const { userId, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("DashboardPage: User authenticated. Setting up Firestore listener.");
-        const leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"));
-        const unsubscribeSnapshot = onSnapshot(leadsQuery, (snapshot) => {
-          const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
-          setLeads(leadsData);
-          setIsLoading(false);
-        }, (error) => {
-          console.error("Error fetching leads:", error);
-          toast({ variant: "destructive", title: "Error", description: "Could not fetch leads from the database." });
-          setIsLoading(false);
-        });
-        return () => unsubscribeSnapshot();
-      } else {
-        console.log("DashboardPage: User is NOT authenticated.");
-        setIsLoading(false);
-        setLeads([]);
-      }
+    // Wait for auth to complete and userId to be available
+    if (authLoading) {
+      return;
+    }
+
+    if (!userId) {
+      console.log("DashboardPage: User is NOT authenticated.");
+      setIsLoading(false);
+      setLeads([]);
+      return;
+    }
+
+    console.log("DashboardPage: User authenticated. Setting up Firestore listener for user:", userId);
+    
+    // Fetch leads from user-scoped collection: users/{userId}/leads
+    const leadsQuery = query(
+      collection(db, "users", userId, "leads"), 
+      orderBy("createdAt", "desc")
+    );
+    
+    const unsubscribeSnapshot = onSnapshot(leadsQuery, (snapshot) => {
+      const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      console.log("DashboardPage: Fetched", leadsData.length, "leads for user:", userId);
+      setLeads(leadsData);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching user leads:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: "Could not fetch leads from the database." 
+      });
+      setIsLoading(false);
     });
-    return () => unsubscribeAuth();
-  }, [toast]);
+
+    return () => unsubscribeSnapshot();
+  }, [userId, authLoading, toast]);
 
 
   const handleNotifySales = (lead: Lead) => {
