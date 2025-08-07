@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiLeadAI Frontend Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .diagram-container {
+            padding: 40px;
+            background: #f8fafc;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .layer {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .layer:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .layer-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .layer-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .presentation { background: #10b981; }
+        .business { background: #f59e0b; }
+        .data { background: #8b5cf6; }
+
+        .component-list {
+            list-style: none;
+        }
+
+        .component-item {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #475569;
+            border-left: 4px solid #cbd5e1;
+            transition: all 0.2s ease;
+        }
+
+        .component-item:hover {
+            background: #e2e8f0;
+            border-left-color: #3b82f6;
+            transform: translateX(5px);
+        }
+
+        .pages-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .page-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .page-card:hover {
+            transform: scale(1.05);
+        }
+
+        .page-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .page-card p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .flow-diagram {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .flow-item {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: center;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .flow-item::after {
+            content: '→';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #64748b;
+        }
+
+        .flow-item:last-child::after {
+            display: none;
+        }
+
+        .tech-stack {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tech-category {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .tech-category h4 {
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .tech-list {
+            list-style: none;
+        }
+
+        .tech-list li {
+            background: white;
+            padding: 8px 12px;
+            margin: 6px 0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #475569;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .flow-container {
+                flex-direction: column;
+            }
+            
+            .flow-item::after {
+                content: '↓';
+                right: 50%;
+                top: 100%;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 OptiLeadAI Frontend Architecture</h1>
+            <p>Next.js 14 • TypeScript • Firebase • Tailwind CSS</p>
+        </div>
+
+        <div class="diagram-container">
+            <!-- Three-Layer Architecture -->
+            <div class="architecture-grid">
+                <div class="layer">
+                    <div class="layer-title">
+                        <div class="layer-icon presentation">UI</div>
+                        Presentation Layer
+                    </div>
+                    <ul class="component-list">
+                        <li class="component-item">📱 Pages & Routes</li>
+                        <li class="component-item">🎨 UI Components</li>
+                        <li class="component-item">📋 Forms</li>
+                        <li class="component-item">🧭 Navigation</li>
+                        <li class="component-item">🎯 Layout Components</li>
+                        <li class="component-item">📊 Charts & Analytics</li>
+                    </ul>
+                </div>
+
+                <div class="layer">
+                    <div class="layer-title">
+                        <div class="layer-icon business">BL</div>
+                        Business Logic Layer
+                    </div>
+                    <ul class="component-list">
+                        <li class="component-item">🔐 Authentication Context</li>
+                        <li class="component-item">🪝 Custom Hooks</li>
+                        <li class="component-item">📡 API Services</li>
+                        <li class="component-item">🤖 AI Integration</li>
+                        <li class="component-item">💾 Local Storage</li>
+                        <li class="component-item">🔧 Utilities</li>
+                    </ul>
+                </div>
+
+                <div class="layer">
+                    <div class="layer-title">
+                        <div class="layer-icon data">DB</div>
+                        Data Layer
+                    </div>
+                    <ul class="component-list">
+                        <li class="component-item">🔥 Firebase Client</li>
+                        <li class="component-item">🔑 Firebase Admin</li>
+                        <li class="component-item">📊 Firestore Collections</li>
+                        <li class="component-item">👤 User Profiles</li>
+                        <li class="component-item">📝 System Prompts</li>
+                        <li class="component-item">🎯 Lead Data</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Application Pages -->
+            <div class="pages-section">
+                <div class="section-title">
+                    📄 Application Pages
+                </div>
+                <div class="pages-grid">
+                    <div class="page-card">
+                        <h4>🏠 Dashboard</h4>
+                        <p>Main overview & metrics</p>
+                    </div>
+                    <div class="page-card">
+                        <h4>🎯 Prospecting</h4>
+                        <p>Lead generation campaigns</p>
+                    </div>
+                    <div class="page-card">
+                        <h4>⭐ Lead Scoring</h4>
+                        <p>AI-powered lead evaluation</p>
+                    </div>
+                    <div class="page-card">
+                        <h4>✉️ Email Personalization</h4>
+                        <p>Customized outreach</p>
+                    </div>
+                    <div class="page-card">
+                        <h4>💧 Drip Campaigns</h4>
+                        <p>Automated email sequences</p>
+                    </div>
+                    <div class="page-card">
+                        <h4>📊 Analytics</h4>
+                        <p>Performance insights</p>
+                    </div>
+                    <div class="page-card">
+                        <h4>👤 Profile</h4>
+                        <p>User settings & preferences</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Flow -->
+            <div class="flow-diagram">
+                <div class="section-title">
+                    🔄 Data Flow Architecture
+                </div>
+                <div class="flow-container">
+                    <div class="flow-item">
+                        <strong>User Interaction</strong>
+                        <br><small>Forms, Clicks, Navigation</small>
+                    </div>
+                    <div class="flow-item">
+                        <strong>React Components</strong>
+                        <br><small>State Management</small>
+                    </div>
+                    <div class="flow-item">
+                        <strong>Business Logic</strong>
+                        <br><small>Hooks, Context, Utils</small>
+                    </div>
+                    <div class="flow-item">
+                        <strong>API Layer</strong>
+                        <br><small>Firebase, External APIs</small>
+                    </div>
+                    <div class="flow-item">
+                        <strong>Data Storage</strong>
+                        <br><small>Firestore, Local Storage</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="tech-stack">
+                <div class="section-title">
+                    🛠️ Technology Stack
+                </div>
+                <div class="tech-grid">
+                    <div class="tech-category">
+                        <h4>🖥️ Frontend Framework</h4>
+                        <ul class="tech-list">
+                            <li>Next.js 14 (App Router)</li>
+                            <li>React 18</li>
+                            <li>TypeScript</li>
+                        </ul>
+                    </div>
+                    <div class="tech-category">
+                        <h4>🎨 UI & Styling</h4>
+                        <ul class="tech-list">
+                            <li>Tailwind CSS</li>
+                            <li>Shadcn/ui Components</li>
+                            <li>Lucide React Icons</li>
+                            <li>Recharts</li>
+                        </ul>
+                    </div>
+                    <div class="tech-category">
+                        <h4>🔐 Authentication & Data</h4>
+                        <ul class="tech-list">
+                            <li>Firebase Auth</li>
+                            <li>Firestore Database</li>
+                            <li>Firebase Admin SDK</li>
+                        </ul>
+                    </div>
+                    <div class="tech-category">
+                        <h4>🤖 AI & Integration</h4>
+                        <ul class="tech-list">
+                            <li>OpenAI API</li>
+                            <li>Custom AI Prompts</li>
+                            <li>Lead Qualification AI</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

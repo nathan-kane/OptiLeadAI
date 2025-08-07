@@ -1,6 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User, Search } from 'lucide-react';
+import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User } from 'lucide-react';
 
 export interface NavItem {
   href: string;
@@ -22,12 +22,7 @@ export const navItems: NavItem[] = [
     icon: Target,
     group: 'Lead Management',
   },
- {
-    href: '/lead-search',
-    label: 'Lead Search',
-    icon: Search, // Using the Search icon
-    group: 'Lead Management',
-  },
+
   {
     href: '/lead-scoring',
     label: 'Lead Scoring',
