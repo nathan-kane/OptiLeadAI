@@ -23,6 +23,9 @@ import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { saveProfile } from "./actions";
 import { getUserProfile } from "@/lib/get-profile-name"; // Import the function to fetch user profile
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from '@/lib/firebase/client';
+import { useSearchParams } from 'next/navigation';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -50,12 +53,58 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
+  const searchParams = useSearchParams();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
     mode: "onChange",
   });
+
+  // Handle successful payment and update subscription status
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    const success = searchParams.get('success');
+    
+    if (success === 'true' && sessionId && currentUser) {
+      console.log('[ProfilePage] Detected successful payment, updating subscription status');
+      
+      // Update subscription status in Firebase
+      const updateSubscription = async () => {
+        try {
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userDocRef, {
+            subscription: {
+              status: 'active',
+              planType: localStorage.getItem('selectedPlan') || 'basic',
+              stripeSessionId: sessionId,
+              updatedAt: serverTimestamp()
+            }
+          });
+          
+          // Clear any stored plan selection
+          localStorage.removeItem('selectedPlan');
+          
+          toast({
+            title: "Payment Successful!",
+            description: "Your subscription is now active. Welcome to OptiLeadAI!",
+            variant: "default",
+          });
+          
+          console.log('[ProfilePage] Subscription status updated successfully');
+        } catch (error) {
+          console.error('[ProfilePage] Error updating subscription status:', error);
+          toast({
+            title: "Payment Successful",
+            description: "Your payment was processed, but there was an issue updating your account. Please contact support if you experience any issues.",
+            variant: "default",
+          });
+        }
+      };
+      
+      updateSubscription();
+    }
+  }, [searchParams, currentUser, toast]);
 
   useEffect(() => {
     console.log("[ProfilePage] Setting up onAuthStateChanged listener.");

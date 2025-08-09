@@ -39,6 +39,8 @@ export default function LoginPage() {
       if (user) {
         console.log("LoginPage: onAuthStateChanged detected USER (uid:", user.uid, "), attempting redirect to /dashboard.");
         setIsAuthCheckLoading(false); // User found, no longer checking
+        // Note: Let the dashboard handle subscription checks and redirects
+        // If user doesn't have active subscription, they'll be redirected appropriately
         router.replace('/dashboard'); // Redirect to dashboard
         console.log("LoginPage: onAuthStateChanged - router.replace('/dashboard') CALLED.");
       } else {

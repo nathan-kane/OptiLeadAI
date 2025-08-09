@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { SidebarNav } from '@/components/layout/sidebar-nav';
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainHeader } from '@/components/layout/main-header';
 import { Logo } from '@/components/icons/logo';
 import { getUserProfile } from '@/lib/get-profile-name';
@@ -88,23 +90,31 @@ export default function AppLayout({
     );
   }
   
-  // If on /verify-email or /profile when loading is done, render only children without the main layout shell
+  // If on /verify-email, render only children without the main layout shell
   // to avoid flashing the dashboard UI.
   if (pathname.startsWith('/verify-email')) {
     return <>{children}</>;
   }
 
+  // Check if user is on profile page with payment success parameters
+  // In this case, allow access without requiring active subscription (subscription status may not be updated yet)
+  const isPostPaymentProfile = pathname === '/profile' && 
+    (typeof window !== 'undefined' && 
+     (window.location.search.includes('session_id=') && window.location.search.includes('success=true')));
+
   return (
-    <SidebarProvider defaultOpen>
-      <div className="flex min-h-screen w-full">
-        <SidebarNav />
-        <div className="relative flex flex-1 flex-col overflow-x-hidden">
-          <MainHeader />
-          <main className="flex-1 p-6 md:p-8 lg:p-10">
-            {children}
-          </main>
+    <ProtectedRoute requiresActiveSubscription={!isPostPaymentProfile}>
+      <SidebarProvider defaultOpen>
+        <div className="flex min-h-screen w-full">
+          <SidebarNav />
+          <div className="relative flex flex-1 flex-col overflow-x-hidden">
+            <MainHeader />
+            <main className="flex-1 p-6 md:p-8 lg:p-10">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </ProtectedRoute>
   );
 }

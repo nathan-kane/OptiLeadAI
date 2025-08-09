@@ -13,15 +13,69 @@ import { auth, db } from "@/lib/firebase/client"; // Assuming auth is exported f
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { DEFAULT_PROMPT_CONFIG } from "@/config/default-prompt";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { sendEmailVerification } from "firebase/auth";
+import { Badge } from "@/components/ui/badge";
 
-export default function SignupPage() {
+function SignupContent() {
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-
+  const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Get plan from URL parameters
+  const selectedPlan = searchParams.get('plan');
+  const redirectToCheckout = searchParams.get('redirect') === 'checkout';
+
+  const planDetails = {
+    basic: { name: 'Basic Plan', price: '$999/month', color: 'bg-blue-500' },
+    gold: { name: 'Gold Plan', price: '$1,999/month', color: 'bg-yellow-500' }
+  };
+
+  const currentPlan = selectedPlan && planDetails[selectedPlan as keyof typeof planDetails];
+
+  const handleSuccessfulSignup = async (userCredential: any) => {
+    if (redirectToCheckout && selectedPlan) {
+      // Immediately redirect to Stripe checkout after successful signup
+      try {
+        const response = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-ID': userCredential.user.uid,
+          },
+          body: JSON.stringify({
+            planType: selectedPlan,
+            userId: userCredential.user.uid,
+            userEmail: userCredential.user.email,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create checkout session');
+        }
+
+        const { url } = await response.json();
+        
+        if (url) {
+          // Redirect directly to Stripe Checkout
+          window.location.href = url;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error) {
+        console.error('Checkout error after signup:', error);
+        setErrorMessage('Account created successfully, but failed to start checkout. Please try selecting a plan from the dashboard.');
+        // Fallback: redirect to dashboard
+        setTimeout(() => router.push('/dashboard'), 2000);
+      }
+    } else {
+      // Regular signup flow - show success message
+      setSuccessMessage('Registration successful! Please check your email for a verification link.');
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -31,7 +85,21 @@ export default function SignupPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Join OptiLead and start supercharging your lead generation.</CardDescription>
+          <CardDescription>
+            {currentPlan ? (
+              <div className="space-y-2">
+                <div>Join OptiLead and start supercharging your lead generation.</div>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-sm">Selected plan:</span>
+                  <Badge className={`${currentPlan.color} text-white`}>
+                    {currentPlan.name} - {currentPlan.price}
+                  </Badge>
+                </div>
+              </div>
+            ) : (
+              "Join OptiLead and start supercharging your lead generation."
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={async (e) => {
@@ -52,6 +120,18 @@ export default function SignupPage() {
             try {
               const userCredential = await createUserWithEmailAndPassword(auth, email, password);
               
+              // Create user document in Firestore with plan information
+              await setDoc(doc(db, 'users', userCredential.user.uid), {
+                email: userCredential.user.email,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                subscription: {
+                  status: null,
+                  planType: null,
+                  selectedPlan: selectedPlan || null // Store the plan they selected during signup
+                }
+              });
+              
               // Create default prompt document in Firestore
               await setDoc(doc(db, 'users', userCredential.user.uid, 'prompts', 'default'), {
                 title: DEFAULT_PROMPT_CONFIG.title,
@@ -65,7 +145,9 @@ export default function SignupPage() {
               // Ensure your domain here is correct for your environment
               const continueUrl = `${window.location.origin}/verify-email`;
               await sendEmailVerification(userCredential.user, { url: continueUrl, handleCodeInApp: false });
-              setSuccessMessage('Registration successful! Please check your email for a verification link.');
+              
+              // Handle successful signup with plan-aware logic
+              await handleSuccessfulSignup(userCredential);
             } catch (error: any) {
               setErrorMessage("Error signing up: " + error.message);
               console.error("Signup error (check Firebase authorized domains):", error.message);
@@ -114,5 +196,13 @@ export default function SignupPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupContent />
+    </Suspense>
   );
 }

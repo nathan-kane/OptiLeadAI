@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/icons/logo";
 import Link from "next/link";
 import Image from "next/image";
+import { CheckoutButton } from "@/components/stripe/CheckoutButton";
 
 export default function LandingPage() {
   return (
@@ -34,7 +35,7 @@ export default function LandingPage() {
             Login
           </Link>
           <Button asChild>
-            <Link href="/signup" prefetch={false}>Sign Up</Link>
+            <Link href="#pricing" prefetch={false}>Sign Up</Link>
           </Button>
         </nav>
       </header>
@@ -53,7 +54,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button size="lg" asChild>
-                    <Link href="/signup" prefetch={false}>
+                    <Link href="#pricing" prefetch={false}>
                       Get Started for Free
                     </Link>
                   </Button>
@@ -199,9 +200,9 @@ export default function LandingPage() {
                   </div>
                 </div>
                 
-                <Button size="lg" className="w-full" asChild>
-                  <Link href="/signup?plan=basic">Get Started with Basic</Link>
-                </Button>
+                <CheckoutButton planType="basic" size="lg" className="w-full">
+                  Get Started with Basic
+                </CheckoutButton>
               </div>
               
               {/* Gold Plan */}
@@ -272,9 +273,13 @@ export default function LandingPage() {
                   </div>
                 </div>
                 
-                <Button size="lg" className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white border-0" asChild>
-                  <Link href="/signup?plan=gold">Upgrade to Gold</Link>
-                </Button>
+                <CheckoutButton 
+                  planType="gold" 
+                  size="lg" 
+                  className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white border-0"
+                >
+                  Upgrade to Gold
+                </CheckoutButton>
               </div>
             </div>
             

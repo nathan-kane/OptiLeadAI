@@ -2,13 +2,23 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase/client';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/client';
+
+type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | null;
+type PlanType = 'basic' | 'gold' | null;
 
 interface AuthContextType {
   user: User | null;
   userId: string | null;
   loading: boolean;
   setUserId: (userId: string | null) => void;
+  // Subscription fields
+  subscriptionStatus: SubscriptionStatus;
+  planType: PlanType;
+  hasActiveSubscription: boolean;
+  subscriptionLoading: boolean;
+  subscriptionError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +39,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Subscription state
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>(null);
+  const [planType, setPlanType] = useState<PlanType>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  
+  // Computed subscription status
+  const hasActiveSubscription = subscriptionStatus === 'active';
 
   // Load userId from localStorage on mount
   useEffect(() => {
@@ -67,6 +86,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // Listen to subscription status changes
+  useEffect(() => {
+    if (!userId) {
+      // Clear subscription data when no user
+      setSubscriptionStatus(null);
+      setPlanType(null);
+      setSubscriptionError(null);
+      return;
+    }
+
+    setSubscriptionLoading(true);
+    setSubscriptionError(null);
+
+    // Listen to user's subscription document
+    const userDocRef = doc(db, 'users', userId);
+    const unsubscribe = onSnapshot(
+      userDocRef,
+      (doc) => {
+        if (doc.exists()) {
+          const userData = doc.data();
+          const subscription = userData.subscription;
+          
+          if (subscription) {
+            setSubscriptionStatus(subscription.status || null);
+            setPlanType(subscription.planType || null);
+          } else {
+            setSubscriptionStatus(null);
+            setPlanType(null);
+          }
+        } else {
+          setSubscriptionStatus(null);
+          setPlanType(null);
+        }
+        setSubscriptionLoading(false);
+      },
+      (error) => {
+        console.error('Error listening to subscription status:', error);
+        setSubscriptionError('Failed to load subscription status');
+        setSubscriptionLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [userId]);
+
   // Function to manually set userId (useful for immediate updates)
   const setUserId = (newUserId: string | null) => {
     setUserIdState(newUserId);
@@ -74,6 +138,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('optilead_userId', newUserId);
     } else {
       localStorage.removeItem('optilead_userId');
+      // Clear subscription data when userId is cleared
+      setSubscriptionStatus(null);
+      setPlanType(null);
+      setSubscriptionError(null);
     }
   };
 
@@ -82,6 +150,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     userId,
     loading,
     setUserId,
+    // Subscription fields
+    subscriptionStatus,
+    planType,
+    hasActiveSubscription,
+    subscriptionLoading,
+    subscriptionError,
   };
 
   return (

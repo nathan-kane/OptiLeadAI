@@ -14,6 +14,9 @@ import { db } from '@/lib/firebase/client';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { AddLeadForm } from '@/components/add-lead-form';
 import { useAuth } from '@/contexts/AuthContext';
+import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { CheckoutButton } from '@/components/stripe/CheckoutButton';
 
 const getPriorityBadgeVariant = (priority: Lead['priority']) => {
   switch (priority) {
@@ -68,6 +71,27 @@ export default function DashboardPage() {
   const { userId, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Handle successful payment redirect
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const sessionId = searchParams.get('session_id');
+    
+    if (success === 'true' && sessionId) {
+      toast({
+        title: "Payment Successful!",
+        description: "Welcome to OptiLeadAI! Your subscription is now active.",
+        variant: "default",
+      });
+      
+      // Clean up URL
+      router.replace('/dashboard');
+    }
+  }, [searchParams, router, toast]);
 
   useEffect(() => {
     // Wait for auth to complete and userId to be available
@@ -133,6 +157,49 @@ export default function DashboardPage() {
         description="Focus on your most promising leads, sorted by AI score."
         actions={<AddLeadForm />}
       />
+      
+      {/* Checkout Prompt Card */}
+      {showCheckoutPrompt && selectedPlan && (
+        <div className="mb-6">
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-900">
+                🎉 Welcome to OptiLeadAI!
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                Complete your {selectedPlan === 'basic' ? 'Basic' : 'Gold'} plan subscription to start using all features.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <CheckoutButton 
+                  planType={selectedPlan as 'basic' | 'gold'}
+                  size="lg"
+                  className="flex-1"
+                >
+                  Complete {selectedPlan === 'basic' ? 'Basic' : 'Gold'} Plan Purchase
+                </CheckoutButton>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCheckoutPrompt(false)}
+                  className="flex-1 sm:flex-none"
+                >
+                  Skip for Now
+                </Button>
+              </div>
+              <p className="text-sm text-blue-600">
+                You can always upgrade later from your billing settings.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
+      {/* Subscription Status Card */}
+      <div className="mb-6">
+        <SubscriptionStatus showDetails={true} />
+      </div>
+      
       <Card>
         <CardHeader className="px-2 sm:px-6 py-4">
           <CardTitle className="text-lg sm:text-2xl">Active Leads</CardTitle>
