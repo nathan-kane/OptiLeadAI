@@ -9,7 +9,68 @@ runConfig:
 runtime: nodejs20
 
 env:
+  - variable: NEXT_PUBLIC_GEMINI_API_KEY
+    value: "AIzaSyDCZ-Y0FfjjdTHQKXCfdCUN3vgoQAOMUQY"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyCDpnkVVcG4a7vn0c4TwKiC55lby3bp_L4"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "optileadsai.firebaseapp.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "optileadsai"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "optileadsai.firebasestorage.app"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "295347007268"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:295347007268:web:9f2c2e10f9326dbf454db1"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: "G-6MVC6VHKC7"
+    availability:
+      - BUILD
+      - RUNTIME
+  # You don't need to expose FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL,
+  # or FIREBASE_PROJECT_ID (server-side only) in apphosting.yaml
+  # unless they are explicitly used by your client-side code.
+  # The build error was related to the client-side config.
+
+  - variable: NEXT_PUBLIC_CALL_SERVICE_URL
+    value: "https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_CALL_SERVICE_API_KEY
+    value: "6e5c1b1d-4c6b-4e2b-8a9d-9a3c2c7e8b5f"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
     value: "pk_live_51OOkCzLLjsDD7g7bmXAMFAht6K2GrJuTNhjgY2j5zK5ZBAKZeMhR17E4kE3GqXdY4pTk3RYfBa0EHD3qPvwQBOE30021Bse2xH"
-  - variable: NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET
-    value: "whsec_qC3iqEtB13MlICoX46pJ3VJxCUwZ80DI"
+    availability:
+      - BUILD
+      - RUNTIME
+  # You might also need to add the Stripe webhook secret here if used at runtime
+  # - variable: NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET
+  #   value: "whsec_qC3iqEtB13MlICoX46pJ3VJxCUwZ80DI"
+  #   availability:
+  #     - RUNTIME # Usually only needed at runtime for webhook verification
