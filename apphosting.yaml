@@ -5,3 +5,9 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+runtime: nodejs20
+
+env:
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_51OOkCzLLjsDD7g7bmXAMFAht6K2GrJuTNhjgY2j5zK5ZBAKZeMhR17E4kE3GqXdY4pTk3RYfBa0EHD3qPvwQBOE30021Bse2xH"
+  NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET: "whsec_qC3iqEtB13MlICoX46pJ3VJxCUwZ80DI"

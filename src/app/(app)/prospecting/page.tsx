@@ -5,6 +5,14 @@ import Papa from "papaparse";
 import SystemPromptManager from './SystemPromptManager';
 import { Lead } from '../../../types/Lead';
 import { useAuth } from '../../../contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Upload, PhoneOutgoing, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 // Import the SystemPrompt interface
 interface SystemPrompt {
@@ -18,18 +26,10 @@ interface SystemPrompt {
   tags?: string[];
 }
 
-interface LeadList {
-  id: string;
-  name: string;
-}
-
-
-
 export default function ProspectingPage() {
   const { userId } = useAuth();
-  const [error, setError] = useState<string | null>(null);
-  const [leadLists, setLeadLists] = useState<LeadList[]>([]);
-  const [selectedLeadListId, setSelectedLeadListId] = useState<string>("");
+  const { toast } = useToast();
+  
   const [selectedPrompt, setSelectedPrompt] = useState<SystemPrompt | null>(null);
 
   // CSV upload state
@@ -38,13 +38,6 @@ export default function ProspectingPage() {
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setLeadLists([
-      { id: "a", name: "June Leads" },
-      { id: "b", name: "July Leads" },
-    ]);
-  }, []);
 
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCsvError(null);
@@ -66,12 +59,7 @@ export default function ProspectingPage() {
             return;
           }
           
-          // Debug: log the first row to see column names
-          console.log('CSV Headers:', Object.keys(data[0] || {}));
-          console.log('First row:', data[0]);
-          
           const parsedLeads: Lead[] = data.map((row: any) => {
-            // Try different possible column name variations
             const nameField = row.Name || row.name || row.NAME || 
                              row['Full Name'] || row['full name'] || 
                              row.firstName || row.FirstName || 
@@ -88,13 +76,14 @@ export default function ProspectingPage() {
               fullName: name || '',
               phone: phone 
             };
-          }).filter((lead: Lead) => lead.firstName && lead.phone);
+          }).filter((lead: Lead) => lead.fullName && lead.phone);
           
           if (!parsedLeads.length) {
-            setCsvError(`No valid leads found. Found columns: ${Object.keys(data[0] || {}).join(', ')}. Expected: Name/name and Phone/phone columns.`);
+            setCsvError(`No valid leads found. Please ensure your CSV has 'Name' and 'Phone' columns.`);
             return;
           }
           setLeads(parsedLeads);
+          toast({ title: "CSV Loaded", description: `Successfully loaded ${parsedLeads.length} leads.` });
         } catch (error) {
           console.error('CSV parsing error:', error);
           setCsvError('Failed to parse CSV.');
@@ -105,30 +94,23 @@ export default function ProspectingPage() {
   };
 
   const handleStartCampaign = async () => {
-    if (!selectedPrompt) {
-      alert('Please select a prompt first.');
+    if (!selectedPrompt || !selectedPrompt.id) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a system prompt first.' });
       return;
     }
     
-    // Prevent multiple simultaneous campaigns
-    if (campaignLoading) {
-      console.log('[Campaign] Campaign already in progress, ignoring duplicate request');
-      return;
-    }
+    if (campaignLoading) return;
     
     setCampaignLoading(true);
     setCampaignStatus('🚀 Starting campaign...');
-    
-    console.log(`[Campaign] Starting sequential campaign with ${leads.length} prospects`);
     
     for (let i = 0; i < leads.length; i++) {
       const lead = leads[i];
       
       try {
-        console.log(`[Campaign] Processing prospect ${i + 1}/${leads.length}: ${lead.fullName}`);
-        setCampaignStatus(`📞 Calling ${lead.fullName} (${lead.phone})... (${i + 1}/${leads.length})`);
+        setCampaignStatus(`📞 Calling ${lead.fullName} (${i + 1}/${leads.length})...`);
         
-        const res = await fetch('https://twilio-elevenlabs-bridge-295347007268.us-central1.run.app/api/start-call', {
+        const res = await fetch('/api/start-call', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -142,100 +124,132 @@ export default function ProspectingPage() {
         });
         
         const data = await res.json();
-        console.log(`[Campaign ${i + 1}/${leads.length}] API Response Status:`, res.status);
-        console.log(`[Campaign ${i + 1}/${leads.length}] API Response Data:`, JSON.stringify(data, null, 2));
         
         if (!res.ok || !data.success) {
-          const errorMsg = data.message || data.error || 'Unknown error';
-          setCampaignStatus(`❌ Failed to call ${lead.fullName} (${lead.phone}): ${errorMsg}`);
-          console.error(`[Campaign] Call failed for ${lead.fullName}:`, errorMsg);
-          break;
+          const errorMsg = data.message || data.error || 'Unknown error from server.';
+          setCampaignStatus(`❌ Failed to call ${lead.fullName}: ${errorMsg}`);
+          toast({ variant: 'destructive', title: `Call Failed for ${lead.fullName}`, description: errorMsg });
+          break; // Stop campaign on first error
         }
         
-        console.log(`[Campaign] Call initiated successfully for ${lead.fullName}, Call ID: ${data.callId}`);
-        setCampaignStatus(`✅ Call initiated for ${lead.fullName}. Waiting for call completion...`);
+        setCampaignStatus(`✅ Call initiated for ${lead.fullName}. Waiting for completion...`);
+        toast({ title: `Call Initiated`, description: `AI is now calling ${lead.fullName}.` });
         
-        // Only wait if there are more prospects to call
+        // Wait before next call to simulate call duration
         if (i < leads.length - 1) {
-          const callCompletionDelay = 120000; // 2 minutes - adjust as needed
-          setCampaignStatus(`⏳ Call in progress for ${lead.fullName}. Next call starts in ${callCompletionDelay / 1000} seconds...`);
-          
-          console.log(`[Campaign] Waiting ${callCompletionDelay / 1000} seconds before next call...`);
+          const callCompletionDelay = 30000; // 30 seconds
           await new Promise(resolve => setTimeout(resolve, callCompletionDelay));
-          
-          setCampaignStatus(`✅ Call completed for ${lead.fullName}. Moving to next prospect...`);
-          console.log(`[Campaign] Moving to next prospect after ${lead.fullName}`);
-        } else {
-          setCampaignStatus(`✅ Final call initiated for ${lead.fullName}. Campaign completing...`);
-          console.log(`[Campaign] Final call initiated for ${lead.fullName}`);
         }
         
       } catch (err: any) {
         console.error(`[Campaign] Error calling ${lead.fullName}:`, err);
         setCampaignStatus(`❌ Error calling ${lead.fullName}: ${err.message}`);
-        break;
+        toast({ variant: 'destructive', title: 'Campaign Error', description: err.message });
+        break; // Stop campaign on error
       }
     }
     
-    // Clean up after campaign completes
     setCampaignLoading(false);
-    setCampaignStatus('🎉 Campaign completed successfully! All calls have been processed.');
-    console.log('[Campaign] Campaign completed successfully');
+    setCampaignStatus('🎉 Campaign completed!');
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: "2rem auto", padding: 24, border: "1px solid #eee", borderRadius: 10 }}>
-      <SystemPromptManager onPromptSelected={setSelectedPrompt} />
-      <h1>Prospecting Campaigns</h1>
-
-
-
-      {/* CSV Upload & Preview */}
-      <div style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
-        <h2>Upload Leads CSV</h2>
-        <input
-          type="file"
-          accept=".csv"
-          ref={fileInputRef}
-          onChange={handleCsvUpload}
-          style={{ marginBottom: 12 }}
-        />
-        {csvError && <div style={{ color: 'red', marginBottom: 8 }}>{csvError}</div>}
+    <>
+    <PageHeader 
+        title="Prospecting Campaigns"
+        description="Upload a list of leads, select a prompt, and start your AI-powered calling campaign."
+    />
+    <div className="grid lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>1. Upload Your Lead List</CardTitle>
+            <CardDescription>Upload a CSV file with 'Name' and 'Phone' columns.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Input
+              type="file"
+              accept=".csv"
+              ref={fileInputRef}
+              onChange={handleCsvUpload}
+              className="max-w-sm"
+            />
+            {csvError && <p className="text-sm text-destructive mt-2">{csvError}</p>}
+          </CardContent>
+        </Card>
+        
         {leads.length > 0 && (
-          <div style={{ marginTop: 12 }}>
-            <h3>Preview ({leads.length} leads):</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
-              <thead>
-                <tr style={{ background: '#f7f7f7' }}>
-                  <th style={{ border: '1px solid #ddd', padding: 6 }}>Full Name</th>
-                  <th style={{ border: '1px solid #ddd', padding: 6 }}>Phone</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.slice(0, 10).map((lead, idx) => (
-                  <tr key={idx}>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.fullName}</td>
-                    <td style={{ border: '1px solid #ddd', padding: 6 }}>{lead.phone}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {leads.length > 10 && <div style={{ marginTop: 6, color: '#888' }}>Showing first 10 leads...</div>}
-          </div>
+          <Card>
+             <CardHeader>
+                <CardTitle>Lead Preview</CardTitle>
+                <CardDescription>Showing the first 10 of {leads.length} loaded leads.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Phone Number</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {leads.slice(0, 10).map((lead, idx) => (
+                    <TableRow key={idx}>
+                        <TableCell>{lead.fullName}</TableCell>
+                        <TableCell>{lead.phone}</TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            </CardContent>
+          </Card>
         )}
       </div>
 
-      {/* Start Campaign Button */}
-      <div style={{ marginBottom: 20 }}>
-        <button
-          onClick={handleStartCampaign}
-          disabled={campaignLoading || leads.length === 0}
-          style={{ padding: '12px 24px', background: leads.length === 0 ? '#ccc' : '#1c7c54', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
-        >
-          {campaignLoading ? 'Starting Campaign...' : 'Start Campaign'}
-        </button>
-        {campaignStatus && <div style={{ marginTop: 12 }}>{campaignStatus}</div>}
+      <div className="space-y-6">
+         <Card>
+            <CardHeader>
+                <CardTitle>2. Select a Prompt</CardTitle>
+                 <CardDescription>Choose the AI script for this campaign.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <SystemPromptManager onPromptSelected={setSelectedPrompt} />
+            </CardContent>
+        </Card>
+
+        <Card>
+             <CardHeader>
+                <CardTitle>3. Start Campaign</CardTitle>
+                <CardDescription>Begin the AI calling sequence.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button
+                    onClick={handleStartCampaign}
+                    disabled={campaignLoading || leads.length === 0 || !selectedPrompt}
+                    className="w-full"
+                    size="lg"
+                >
+                    {campaignLoading ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> In Progress...</>
+                    ) : (
+                        <><PhoneOutgoing className="mr-2 h-4 w-4" /> Start Calling Campaign</>
+                    )}
+                </Button>
+                {campaignStatus && (
+                <Alert className="mt-4">
+                    <AlertTitle className="flex items-center gap-2">
+                        {campaignLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                        Campaign Status
+                    </AlertTitle>
+                    <AlertDescription>
+                        {campaignStatus}
+                    </AlertDescription>
+                </Alert>
+                )}
+            </CardContent>
+        </Card>
       </div>
     </div>
+    </>
   );
 }
