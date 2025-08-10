@@ -29,7 +29,7 @@ function SignupContent() {
   const redirectToCheckout = searchParams.get('redirect') === 'checkout';
 
   const planDetails = {
-    basic: { name: 'Basic Plan', price: '$999/month', color: 'bg-blue-500' },
+    basic: { name: 'Basic Plan', price: '$150/month', color: 'bg-blue-500' },
     gold: { name: 'Gold Plan', price: '$1,999/month', color: 'bg-yellow-500' }
   };
 

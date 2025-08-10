@@ -145,7 +145,7 @@ export default function LandingPage() {
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Basic</h3>
                   <p className="text-gray-600 mb-6">Perfect for growing sales teams</p>
                   <div className="flex items-baseline justify-center">
-                    <span className="text-5xl font-bold text-gray-900">$999</span>
+                    <span className="text-5xl font-bold text-gray-900">$150</span>
                     <span className="text-xl text-gray-600 ml-2">/month</span>
                   </div>
                 </div>

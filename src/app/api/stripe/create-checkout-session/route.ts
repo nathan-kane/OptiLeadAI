@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const planConfigs = {
       basic: {
         priceId: process.env.STRIPE_BASIC_PRICE_ID,
-        amount: 99900, // $999.00 in cents
+        amount: 15000, // $150.00 in cents
         name: 'OptiLeadAI Basic Plan',
         description: 'AI cold-calling, lead scoring, lead data tracking, Email campaigns with AI suggested content'
       },
