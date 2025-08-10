@@ -9,17 +9,17 @@ runConfig:
 runtime: nodejs20
 
 env:
-  - variable: NEXT_PUBLIC_GEMINI_API_KEY
-    value: "AIzaSyDCZ-Y0FfjjdTHQKXCfdCUN3vgoQAOMUQY"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "AIzaSyCDpnkVVcG4a7vn0c4TwKiC55lby3bp_L4"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+#  - variable: NEXT_PUBLIC_GEMINI_API_KEY
+#    value: "AIzaSyDCZ-Y0FfjjdTHQKXCfdCUN3vgoQAOMUQY"
+#    availability:
+#      - BUILD
+#      - RUNTIME
+#  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+#    value: "AIzaSyCDpnkVVcG4a7vn0c4TwKiC55lby3bp_L4"
+#    availability:
+#      - BUILD
+#      - RUNTIME
+#  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: "optileadsai.firebaseapp.com"
     availability:
       - BUILD
