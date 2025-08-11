@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CheckoutButton } from "@/components/stripe/CheckoutButton";
 
+// Updated pricing: Basic plan now $150/month
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
