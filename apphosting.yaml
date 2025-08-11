@@ -59,7 +59,8 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # You might also need to add the Stripe webhook secret here if used at runtime
   - variable: NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET
     value: "whsec_qC3iqEtB13MlICoX46pJ3VJxCUwZ80DI"
     availability:
-       - RUNTIME # Usually only needed at runtime for webhook verification
+      - RUNTIME # Usually only needed at runtime for webhook verification
