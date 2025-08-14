@@ -9,7 +9,8 @@ export interface Lead {
   websiteEngagement?: string; // Could be a summary or link to more details
   score: number;
   priority: 'High' | 'Medium' | 'Low';
-  status: 'New' | 'Contacted' | 'Qualified' | 'Nurturing' | 'Converted' | 'Rejected' | 'Disqualified';
+  status: 'Buyer' | 'Seller' | 'Renter' | 'Unknown'; // Lead type classification
+  contactStatus: 'New' | 'Contacted' | 'Qualified' | 'Nurturing' | 'Converted' | 'Rejected' | 'Disqualified'; // Contact progression
   lastInteraction?: string; // Date or description
   interactionHistory?: Array<{ date: string; type: string; notes: string }>;
   rationale?: string; // From AI scoring
@@ -54,6 +55,11 @@ export interface DripCampaign {
 
 export interface AnalyticsData {
   leadsGenerated: Array<{ date: string; count: number }>;
+  leadsByPriority: {
+    daily: Array<{ date: string; high: number; medium: number; low: number }>;
+    weekly: Array<{ week: string; high: number; medium: number; low: number }>;
+    monthly: Array<{ month: string; high: number; medium: number; low: number }>;
+  };
   leadsQualified: { qualified: number; unqualified: number };
   conversionRate: Array<{ stage: string; count: number; rate?: number }>; // e.g. New -> Qualified -> Converted
   emailCampaignPerformance: Array<{ campaignName: string; openRate: number; ctr: number }>;

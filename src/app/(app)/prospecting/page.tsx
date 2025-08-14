@@ -159,96 +159,92 @@ export default function ProspectingPage() {
         title="Prospecting Campaigns"
         description="Upload a list of leads, select a prompt, and start your AI-powered calling campaign."
     />
-    <div className="grid lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>1. Upload Your Lead List</CardTitle>
+          <CardDescription>Upload a CSV file with 'Name' and 'Phone' columns.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Input
+            type="file"
+            accept=".csv"
+            ref={fileInputRef}
+            onChange={handleCsvUpload}
+            className="max-w-sm"
+          />
+          {csvError && <p className="text-sm text-destructive mt-2">{csvError}</p>}
+        </CardContent>
+      </Card>
+      
+      {leads.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>1. Upload Your Lead List</CardTitle>
-            <CardDescription>Upload a CSV file with 'Name' and 'Phone' columns.</CardDescription>
+           <CardHeader>
+              <CardTitle>Lead Preview</CardTitle>
+              <CardDescription>Showing the first 10 of {leads.length} loaded leads.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Input
-              type="file"
-              accept=".csv"
-              ref={fileInputRef}
-              onChange={handleCsvUpload}
-              className="max-w-sm"
-            />
-            {csvError && <p className="text-sm text-destructive mt-2">{csvError}</p>}
+              <Table>
+              <TableHeader>
+                  <TableRow>
+                  <TableHead>Full Name</TableHead>
+                  <TableHead>Phone Number</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {leads.slice(0, 10).map((lead, idx) => (
+                  <TableRow key={idx}>
+                      <TableCell>{lead.fullName}</TableCell>
+                      <TableCell>{lead.phone}</TableCell>
+                  </TableRow>
+                  ))}
+              </TableBody>
+              </Table>
           </CardContent>
         </Card>
-        
-        {leads.length > 0 && (
-          <Card>
-             <CardHeader>
-                <CardTitle>Lead Preview</CardTitle>
-                <CardDescription>Showing the first 10 of {leads.length} loaded leads.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Full Name</TableHead>
-                    <TableHead>Phone Number</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {leads.slice(0, 10).map((lead, idx) => (
-                    <TableRow key={idx}>
-                        <TableCell>{lead.fullName}</TableCell>
-                        <TableCell>{lead.phone}</TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
-      <div className="space-y-6">
-         <Card>
-            <CardHeader>
-                <CardTitle>2. Select a Prompt</CardTitle>
-                 <CardDescription>Choose the AI script for this campaign.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <SystemPromptManager onPromptSelected={setSelectedPrompt} />
-            </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>2. Select a Prompt</CardTitle>
+          <CardDescription>Choose the AI script for this campaign.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SystemPromptManager onPromptSelected={setSelectedPrompt} />
+        </CardContent>
+      </Card>
 
-        <Card>
-             <CardHeader>
-                <CardTitle>3. Start Campaign</CardTitle>
-                <CardDescription>Begin the AI calling sequence.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button
-                    onClick={handleStartCampaign}
-                    disabled={campaignLoading || leads.length === 0 || !selectedPrompt}
-                    className="w-full"
-                    size="lg"
-                >
-                    {campaignLoading ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> In Progress...</>
-                    ) : (
-                        <><PhoneOutgoing className="mr-2 h-4 w-4" /> Start Calling Campaign</>
-                    )}
-                </Button>
-                {campaignStatus && (
-                <Alert className="mt-4">
-                    <AlertTitle className="flex items-center gap-2">
-                        {campaignLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                        Campaign Status
-                    </AlertTitle>
-                    <AlertDescription>
-                        {campaignStatus}
-                    </AlertDescription>
-                </Alert>
-                )}
-            </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>3. Start Campaign</CardTitle>
+          <CardDescription>Begin the AI calling sequence.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={handleStartCampaign}
+            disabled={campaignLoading || leads.length === 0 || !selectedPrompt}
+            className="w-full"
+            size="lg"
+          >
+            {campaignLoading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> In Progress...</>
+            ) : (
+              <><PhoneOutgoing className="mr-2 h-4 w-4" /> Start Calling Campaign</>
+            )}
+          </Button>
+          {campaignStatus && (
+          <Alert className="mt-4">
+            <AlertTitle className="flex items-center gap-2">
+              {campaignLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+              Campaign Status
+            </AlertTitle>
+            <AlertDescription>
+              {campaignStatus}
+            </AlertDescription>
+          </Alert>
+          )}
+        </CardContent>
+      </Card>
     </div>
     </>
   );

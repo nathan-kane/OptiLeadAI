@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, BellPlus, Edit3, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { MoreHorizontal, Edit3, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/client';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { AddLeadForm } from '@/components/add-lead-form';
 import { useAuth } from '@/contexts/AuthContext';
 import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
@@ -31,8 +31,8 @@ const getPriorityBadgeVariant = (priority: Lead['priority']) => {
   }
 };
 
-const getStatusBadgeVariant = (status: Lead['status']) => {
-  switch (status) {
+const getStatusBadgeVariant = (contactStatus: Lead['contactStatus']) => {
+  switch (contactStatus) {
     case 'New': return 'outline';
     case 'Contacted': return 'default';
     case 'Qualified': return 'default';
@@ -44,8 +44,8 @@ const getStatusBadgeVariant = (status: Lead['status']) => {
   }
 };
 
-const getStatusColorClass = (status: Lead['status']) => {
-  switch (status) {
+const getStatusColorClass = (contactStatus: Lead['contactStatus']) => {
+  switch (contactStatus) {
     case 'Qualified': return 'bg-green-500 hover:bg-green-600';
     case 'Converted': return 'bg-blue-500 hover:bg-blue-600';
     default: return '';
@@ -140,13 +140,49 @@ export default function DashboardPage() {
     });
   };
 
-  const handleUpdateStatus = (leadId: string, newStatus: Lead['status']) => {
-    // This would be a Firestore update in a real app
-    console.log(`Updating lead ${leadId} to status ${newStatus}`);
-    toast({
-      title: "Status Updated",
-      description: `Lead status changed to ${newStatus}. (Note: DB update not yet implemented)`,
-    });
+  const handleUpdateStatus = async (leadId: string, newContactStatus: Lead['contactStatus']) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Update the lead contact status in Firestore
+      const leadRef = doc(db, "users", userId, "leads", leadId);
+      await updateDoc(leadRef, {
+        contactStatus: newContactStatus,
+        lastInteraction: new Date().toISOString(),
+        updatedAt: new Date()
+      });
+
+      // Update local state immediately for better UX
+      setLeads(prevLeads => 
+        prevLeads.map(lead => 
+          lead.id === leadId 
+            ? { ...lead, contactStatus: newContactStatus, lastInteraction: new Date().toISOString() }
+            : lead
+        )
+      );
+
+      toast({
+        title: "Contact Status Updated",
+        description: `Lead contact status successfully changed to ${newContactStatus}.`,
+        variant: "default",
+      });
+
+      console.log(`Successfully updated lead ${leadId} contact status to ${newContactStatus}`);
+    } catch (error) {
+      console.error("Error updating lead contact status:", error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update lead contact status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -214,7 +250,8 @@ export default function DashboardPage() {
                 <TableRow>
                   <TableHead className="text-xs sm:text-sm">Name</TableHead>
                   <TableHead className="text-xs sm:text-sm">Phone</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Type</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Contact Status</TableHead>
                   <TableHead className="text-xs sm:text-sm">Timeline</TableHead>
                   <TableHead className="text-xs sm:text-sm">Location</TableHead>
                   <TableHead className="text-xs sm:text-sm">Budget</TableHead>
@@ -227,11 +264,11 @@ export default function DashboardPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center h-24">Loading...</TableCell>
+                    <TableCell colSpan={11} className="text-center h-24">Loading...</TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center h-24">
+                    <TableCell colSpan={11} className="text-center h-24">
                       No leads found. Start making calls to see leads here!
                     </TableCell>
                   </TableRow>
@@ -243,6 +280,11 @@ export default function DashboardPage() {
                       <TableCell>
                         <Badge variant={lead.status === 'Buyer' ? 'default' : lead.status === 'Seller' ? 'secondary' : 'outline'}>
                           {lead.status || 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(lead.contactStatus || 'New')}>
+                          {lead.contactStatus || 'New'}
                         </Badge>
                       </TableCell>
                       <TableCell>{lead.timeline || 'N/A'}</TableCell>
@@ -264,17 +306,8 @@ export default function DashboardPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => alert(`Viewing details for ${lead.fullName}`)}>
-                              <Eye className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleNotifySales(lead)}>
-                              <BellPlus className="mr-2 h-4 w-4" /> Notify Sales
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Contacted')}>
                               <Edit3 className="mr-2 h-4 w-4" /> Mark as Contacted
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Qualified')}>
-                              <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Qualified
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Converted')} className="text-green-600">

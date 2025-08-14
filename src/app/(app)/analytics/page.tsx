@@ -1,19 +1,16 @@
 "use client";
 
+import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Pie, PieChart, Cell } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockAnalyticsData } from '@/data/mock-data';
 import type { AnalyticsData } from '@/types';
 import { TrendingUp } from 'lucide-react';
 
-const chartConfigLeadsGenerated = {
-  leads: {
-    label: "Leads Generated",
-    color: "hsl(var(--chart-1))",
-  },
-};
+
 
 const chartConfigQualified = {
   qualified: { label: "Qualified", color: "hsl(var(--chart-1))" },
@@ -36,8 +33,35 @@ const PIE_COLORS = [
 ];
 
 
+type TimePeriod = 'daily' | 'weekly' | 'monthly';
+
 export default function AnalyticsPage() {
   const analyticsData: AnalyticsData = mockAnalyticsData;
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('weekly');
+
+  // Transform data based on selected period
+  const getChartData = () => {
+    const data = analyticsData.leadsByPriority[selectedPeriod];
+    return data.map(item => {
+      let periodLabel: string;
+      if (selectedPeriod === 'daily') {
+        periodLabel = (item as { date: string }).date;
+      } else if (selectedPeriod === 'weekly') {
+        periodLabel = (item as { week: string }).week;
+      } else {
+        periodLabel = (item as { month: string }).month;
+      }
+      
+      return {
+        period: periodLabel,
+        High: item.high,
+        Medium: item.medium,
+        Low: item.low
+      };
+    });
+  };
+
+  const chartData = getChartData();
 
   return (
     <>
@@ -48,18 +72,39 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Leads Generated Over Time</CardTitle>
-            <CardDescription>Daily count of new leads acquired in the last 7 days.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Leads by Priority</CardTitle>
+                <CardDescription>Distribution of leads across High, Medium, and Low priority categories over time.</CardDescription>
+              </div>
+              <Select value={selectedPeriod} onValueChange={(value: TimePeriod) => setSelectedPeriod(value)}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfigLeadsGenerated} className="h-[300px] w-full">
-              <LineChart data={analyticsData.leadsGenerated} margin={{ left: 12, right: 12, top: 5, bottom: 5 }}>
+            <ChartContainer config={{
+              High: { label: "High Priority", color: "hsl(var(--chart-1))" },
+              Medium: { label: "Medium Priority", color: "hsl(var(--chart-2))" },
+              Low: { label: "Low Priority", color: "hsl(var(--chart-3))" },
+            }} className="h-[300px] w-full">
+              <BarChart data={chartData} margin={{ left: 12, right: 12, top: 5, bottom: 5 }}>
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
                 <YAxis tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Line dataKey="count" type="monotone" stroke="var(--color-leads)" strokeWidth={2} dot={true} name="Leads" />
-              </LineChart>
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="High" fill="var(--color-High)" radius={4} />
+                <Bar dataKey="Medium" fill="var(--color-Medium)" radius={4} />
+                <Bar dataKey="Low" fill="var(--color-Low)" radius={4} />
+              </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>

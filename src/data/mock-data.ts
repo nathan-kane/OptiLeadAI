@@ -138,6 +138,28 @@ export const mockAnalyticsData: AnalyticsData = {
     { date: '2024-07-06', count: 17 },
     { date: '2024-07-07', count: 22 },
   ].map(d => ({date: d.date, count: d.count + Math.floor(Math.random() * 5) })),
+  leadsByPriority: {
+    daily: [
+      { date: '2024-08-08', high: 5, medium: 12, low: 8 },
+      { date: '2024-08-09', high: 7, medium: 15, low: 10 },
+      { date: '2024-08-10', high: 6, medium: 11, low: 9 },
+      { date: '2024-08-11', high: 8, medium: 14, low: 12 },
+      { date: '2024-08-12', high: 9, medium: 16, low: 11 },
+      { date: '2024-08-13', high: 5, medium: 9, low: 10 },
+      { date: '2024-08-14', high: 5, medium: 8, low: 10 },
+    ],
+    weekly: [
+      { week: 'Week 30', high: 28, medium: 65, low: 45 },
+      { week: 'Week 31', high: 32, medium: 58, low: 52 },
+      { week: 'Week 32', high: 45, medium: 85, low: 70 },
+      { week: 'Week 33', high: 38, medium: 72, low: 48 },
+    ],
+    monthly: [
+      { month: 'June 2024', high: 95, medium: 180, low: 125 },
+      { month: 'July 2024', high: 120, medium: 210, low: 165 },
+      { month: 'August 2024', high: 145, medium: 245, low: 185 },
+    ],
+  },
   leadsQualified: { qualified: 75, unqualified: 125 },
   conversionRate: [
     { stage: 'New', count: 200 },
