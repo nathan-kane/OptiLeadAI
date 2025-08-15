@@ -18,10 +18,10 @@ const chartConfigQualified = {
 };
 
 const chartConfigConversion = {
-  new: { label: "New", color: "hsl(var(--chart-1))" },
-  contacted: { label: "Contacted", color: "hsl(var(--chart-2))" },
-  qualified: { label: "Qualified", color: "hsl(var(--chart-3))" },
-  converted: { label: "Converted", color: "hsl(var(--chart-4))" },
+  New: { label: "New Leads", color: "hsl(var(--chart-1))" },
+  Contacted: { label: "Contacted", color: "hsl(var(--chart-2))" },
+  Qualified: { label: "Qualified", color: "hsl(var(--chart-3))" },
+  Converted: { label: "Converted", color: "hsl(var(--chart-4))" },
 };
 
 const PIE_COLORS = [
@@ -33,7 +33,7 @@ const PIE_COLORS = [
 ];
 
 
-type TimePeriod = 'daily' | 'weekly' | 'monthly';
+type TimePeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export default function AnalyticsPage() {
   const analyticsData: AnalyticsData = mockAnalyticsData;
@@ -48,8 +48,10 @@ export default function AnalyticsPage() {
         periodLabel = (item as { date: string }).date;
       } else if (selectedPeriod === 'weekly') {
         periodLabel = (item as { week: string }).week;
-      } else {
+      } else if (selectedPeriod === 'monthly') {
         periodLabel = (item as { month: string }).month;
+      } else {
+        periodLabel = (item as { year: string }).year;
       }
       
       return {
@@ -61,33 +63,58 @@ export default function AnalyticsPage() {
     });
   };
 
+  // Transform conversion funnel data based on selected period
+  const getConversionChartData = () => {
+    const data = analyticsData.conversionRate[selectedPeriod];
+    return data.map(item => {
+      let periodLabel: string;
+      if (selectedPeriod === 'daily') {
+        periodLabel = (item as { date: string }).date;
+      } else if (selectedPeriod === 'weekly') {
+        periodLabel = (item as { week: string }).week;
+      } else if (selectedPeriod === 'monthly') {
+        periodLabel = (item as { month: string }).month;
+      } else {
+        periodLabel = (item as { year: string }).year;
+      }
+      
+      return {
+        period: periodLabel,
+        New: item.new,
+        Contacted: item.contacted,
+        Qualified: item.qualified,
+        Converted: item.converted
+      };
+    });
+  };
+
   const chartData = getChartData();
+  const conversionChartData = getConversionChartData();
 
   return (
     <>
-      <PageHeader
-        title="Conversion Analytics"
-        description="Track your lead generation performance and campaign effectiveness."
-      />
+      <div className="flex items-center justify-between mb-6">
+        <PageHeader
+          title="Conversion Analytics"
+          description="Track your lead generation performance and campaign effectiveness."
+        />
+        <Select value={selectedPeriod} onValueChange={(value: TimePeriod) => setSelectedPeriod(value)}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">Daily</SelectItem>
+            <SelectItem value="weekly">Weekly</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="yearly">Yearly</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
+        <Card className="lg:col-span-2 xl:col-span-3">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Leads by Priority</CardTitle>
-                <CardDescription>Distribution of leads across High, Medium, and Low priority categories over time.</CardDescription>
-              </div>
-              <Select value={selectedPeriod} onValueChange={(value: TimePeriod) => setSelectedPeriod(value)}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <CardTitle>Leads by Priority</CardTitle>
+            <CardDescription>Distribution of leads across High, Medium, and Low priority categories over time.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={{
@@ -109,85 +136,25 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Lead Qualification Ratio</CardTitle>
-            <CardDescription>Proportion of qualified vs. unqualified leads.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center">
-             <ChartContainer config={chartConfigQualified} className="h-[300px] w-full max-w-[300px]">
-                <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                    <Pie 
-                        data={[
-                            { name: 'Qualified', value: analyticsData.leadsQualified.qualified, fill: PIE_COLORS[0] },
-                            { name: 'Unqualified', value: analyticsData.leadsQualified.unqualified, fill: PIE_COLORS[1] }
-                        ]} 
-                        dataKey="value" 
-                        nameKey="name" 
-                        cx="50%" 
-                        cy="50%" 
-                        outerRadius={100}
-                        labelLine={false}
-                        label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
-                            const RADIAN = Math.PI / 180;
-                            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                            return (
-                            <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize="12px">
-                                {`${name} (${(percent * 100).toFixed(0)}%)`}
-                            </text>
-                            );
-                        }}
-                    >
-                         { [analyticsData.leadsQualified.qualified, analyticsData.leadsQualified.unqualified].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                         ))}
-                    </Pie>
-                     <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+
 
         <Card className="lg:col-span-2 xl:col-span-3">
           <CardHeader>
             <CardTitle>Lead Conversion Funnel</CardTitle>
-            <CardDescription>Number of leads at each stage of the funnel.</CardDescription>
+            <CardDescription>Number of leads at each stage of the funnel over time.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfigConversion} className="h-[300px] w-full">
-              <BarChart data={analyticsData.conversionRate} layout="vertical" margin={{ left: 20, right: 20 }}>
-                <CartesianGrid horizontal={false} />
-                <XAxis type="number" tickLine={false} axisLine={false} />
-                <YAxis dataKey="stage" type="category" tickLine={false} axisLine={false} width={80} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="count" fill="var(--color-new)" radius={4} name="Leads" />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        
-        <Card className="lg:col-span-2 xl:col-span-3">
-          <CardHeader>
-            <CardTitle>Email Campaign Performance</CardTitle>
-            <CardDescription>Open rates and click-through rates for active campaigns.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <ChartContainer config={{
-                openRate: { label: "Open Rate (%)", color: "hsl(var(--chart-1))" },
-                ctr: { label: "CTR (%)", color: "hsl(var(--chart-2))" },
-            }} className="h-[300px] w-full">
-              <BarChart data={analyticsData.emailCampaignPerformance}>
+              <BarChart data={conversionChartData} margin={{ left: 12, right: 12, top: 5, bottom: 5 }}>
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey="campaignName" tickLine={false} axisLine={false} tickMargin={8} />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
                 <YAxis tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="openRate" fill="var(--color-openRate)" radius={4} />
-                <Bar dataKey="ctr" fill="var(--color-ctr)" radius={4} />
+                <Bar dataKey="New" fill="var(--color-New)" radius={4} />
+                <Bar dataKey="Contacted" fill="var(--color-Contacted)" radius={4} />
+                <Bar dataKey="Qualified" fill="var(--color-Qualified)" radius={4} />
+                <Bar dataKey="Converted" fill="var(--color-Converted)" radius={4} />
               </BarChart>
             </ChartContainer>
           </CardContent>

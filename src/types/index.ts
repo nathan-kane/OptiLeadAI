@@ -59,8 +59,14 @@ export interface AnalyticsData {
     daily: Array<{ date: string; high: number; medium: number; low: number }>;
     weekly: Array<{ week: string; high: number; medium: number; low: number }>;
     monthly: Array<{ month: string; high: number; medium: number; low: number }>;
+    yearly: Array<{ year: string; high: number; medium: number; low: number }>;
   };
   leadsQualified: { qualified: number; unqualified: number };
-  conversionRate: Array<{ stage: string; count: number; rate?: number }>; // e.g. New -> Qualified -> Converted
+  conversionRate: {
+    daily: Array<{ date: string; new: number; contacted: number; qualified: number; converted: number }>;
+    weekly: Array<{ week: string; new: number; contacted: number; qualified: number; converted: number }>;
+    monthly: Array<{ month: string; new: number; contacted: number; qualified: number; converted: number }>;
+    yearly: Array<{ year: string; new: number; contacted: number; qualified: number; converted: number }>;
+  };
   emailCampaignPerformance: Array<{ campaignName: string; openRate: number; ctr: number }>;
 }

@@ -14,7 +14,6 @@ import { db } from '@/lib/firebase/client';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { AddLeadForm } from '@/components/add-lead-form';
 import { useAuth } from '@/contexts/AuthContext';
-import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckoutButton } from '@/components/stripe/CheckoutButton';
 
@@ -230,11 +229,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       )}
-      
-      {/* Subscription Status Card */}
-      <div className="mb-6">
-        <SubscriptionStatus showDetails={true} />
-      </div>
       
       <Card>
         <CardHeader className="px-2 sm:px-6 py-4">

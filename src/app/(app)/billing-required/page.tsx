@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CreditCard, AlertTriangle, Clock, XCircle, Info } from 'lucide-react';
+import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
+import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
 
 export default function BillingRequiredPage() {
@@ -88,6 +90,59 @@ export default function BillingRequiredPage() {
     }
   };
 
+  // If user has active subscription, show billing management page
+  if (subscriptionStatus === 'active') {
+    return (
+      <>
+        <PageHeader
+          title="Billing & Subscription"
+          description="Manage your subscription, billing details, and payment methods."
+        />
+        
+        {/* Subscription Status Card */}
+        <div className="mb-6">
+          <SubscriptionStatus showDetails={true} />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Subscription</CardTitle>
+              <CardDescription>
+                Update your plan, payment methods, and billing information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={handleManageBilling}
+                className="w-full"
+                size="lg"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Manage Billing
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Need Help?</CardTitle>
+              <CardDescription>
+                Contact our support team for billing assistance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" asChild className="w-full">
+                <Link href="/contact">Contact Support</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  // If user doesn't have active subscription, show the billing required page
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">

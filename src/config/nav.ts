@@ -54,17 +54,4 @@ export const navItems: NavItem[] = [
   //   icon: Settings,
   //   group: 'Configuration',
   // },
-  {
-    href: '/billing-required',
-    label: 'Billing',
-    icon: CreditCard,
-    group: 'Configuration',
-  },
-  {
-    href: '/profile',
-    label: 'Profile',
-    icon: User,
-    group: 'Configuration',
-  },
 ];
-

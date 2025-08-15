@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ function SubmitButton() {
 
 export function AddLeadForm() {
   const initialState: AddLeadFormState = { message: '', success: false };
-  const [state, formAction] = useFormState(addLeadAction, initialState);
+  const [state, formAction] = useActionState(addLeadAction, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
