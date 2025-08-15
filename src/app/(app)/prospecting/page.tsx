@@ -155,11 +155,11 @@ export default function ProspectingPage() {
 
   return (
     <>
-    <PageHeader 
-        title="Prospecting Campaigns"
-        description="Upload a list of leads, select a prompt, and start your AI-powered calling campaign."
-    />
     <div className="space-y-6 max-w-4xl mx-auto">
+      <PageHeader 
+          title="Prospecting Campaigns"
+          description="Upload a list of leads, select a prompt, and start your AI-powered calling campaign."
+      />
       <Card>
         <CardHeader>
           <CardTitle>1. Upload Your Lead List</CardTitle>
