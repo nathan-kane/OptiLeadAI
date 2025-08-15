@@ -23,24 +23,24 @@ export const navItems: NavItem[] = [
     group: 'Lead Management',
   },
 
-  {
-    href: '/lead-scoring',
-    label: 'Lead Scoring',
-    icon: Target,
-    group: 'Lead Management',
-  },
-  {
-    href: '/email-personalization',
-    label: 'Email Personalization',
-    icon: MailCheck,
-    group: 'Lead Management',
-  },
-  {
-    href: '/drip-campaigns',
-    label: 'Drip Campaigns',
-    icon: Workflow,
-    group: 'Marketing Automation',
-  },
+  // {
+  //   href: '/lead-scoring',
+  //   label: 'Lead Scoring',
+  //   icon: Target,
+  //   group: 'Lead Management',
+  // },
+  // {
+  //   href: '/email-personalization',
+  //   label: 'Email Personalization',
+  //   icon: MailCheck,
+  //   group: 'Lead Management',
+  // },
+  // {
+  //   href: '/drip-campaigns',
+  //   label: 'Drip Campaigns',
+  //   icon: Workflow,
+  //   group: 'Marketing Automation',
+  // },
   {
     href: '/analytics',
     label: 'Analytics',
