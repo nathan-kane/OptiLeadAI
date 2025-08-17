@@ -10,7 +10,22 @@ import { UserMenu } from '@/components/layout/user-menu';
 
 export function MainHeader() {
   const pathname = usePathname();
-  const currentNavItem = navItems.find(item => item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href)));
+  
+  // Helper function to find nav item in nested structure
+  const findNavItem = (items: any[]): any => {
+    for (const item of items) {
+      if (item.href === pathname || (item.href && item.href !== '/' && pathname.startsWith(item.href))) {
+        return item;
+      }
+      if (item.children) {
+        const found = findNavItem(item.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  
+  const currentNavItem = findNavItem(navItems);
   const pageTitle = currentNavItem?.label || "Dashboard";
 
   return (

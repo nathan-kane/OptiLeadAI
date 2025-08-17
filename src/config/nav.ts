@@ -1,51 +1,81 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User, CreditCard, DollarSign, Plus, Building2, Home, Search, ClipboardCheck } from 'lucide-react';
 
 export interface NavItem {
-  href: string;
+  href?: string;
   label: string;
   icon: LucideIcon;
   group?: string;
+  children?: NavItem[];
 }
 
 export const navItems: NavItem[] = [
   {
-    href: '/dashboard', // Changed from '/'
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    group: 'Overview',
-  },
-  {
-    href: '/prospecting',
-    label: 'Prospecting Campaigns',
+    label: 'Leads',
     icon: Target,
     group: 'Lead Management',
+    children: [
+      {
+        href: '/dashboard',
+        label: 'Leads Dashboard',
+        icon: LayoutDashboard,
+      },
+      {
+        href: '/prospecting',
+        label: 'Prospecting Campaigns',
+        icon: Target,
+      },
+      {
+        href: '/analytics',
+        label: 'Analytics',
+        icon: BarChart3,
+      },
+    ],
   },
-
-  // {
-  //   href: '/lead-scoring',
-  //   label: 'Lead Scoring',
-  //   icon: Target,
-  //   group: 'Lead Management',
-  // },
-  // {
-  //   href: '/email-personalization',
-  //   label: 'Email Personalization',
-  //   icon: MailCheck,
-  //   group: 'Lead Management',
-  // },
-  // {
-  //   href: '/drip-campaigns',
-  //   label: 'Drip Campaigns',
-  //   icon: Workflow,
-  //   group: 'Marketing Automation',
-  // },
   {
-    href: '/analytics',
-    label: 'Analytics',
-    icon: BarChart3,
-    group: 'Performance',
+    label: 'Transactions',
+    icon: DollarSign,
+    group: 'Transaction Management',
+    children: [
+      {
+        href: '/transactions',
+        label: 'Transactions Dashboard',
+        icon: LayoutDashboard,
+      },
+      {
+        href: '/transactions/new',
+        label: 'New Transaction',
+        icon: Plus,
+      },
+    ],
+  },
+  {
+    label: 'Service Partners',
+    icon: Building2,
+    group: 'Service Management',
+    children: [
+      {
+        href: '/service-partners/mortgage',
+        label: 'Mortgage Companies',
+        icon: Home,
+      },
+      {
+        href: '/service-partners/title-company',
+        label: 'Title Companies',
+        icon: ClipboardCheck,
+      },
+      {
+        href: '/service-partners/appraisers',
+        label: 'Appraisers',
+        icon: Search,
+      },
+      {
+        href: '/service-partners/inspectors',
+        label: 'Inspectors',
+        icon: ClipboardCheck,
+      },
+    ],
   },
   // Example for future expansion
   // {

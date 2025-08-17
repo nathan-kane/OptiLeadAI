@@ -10,7 +10,11 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
+import { ChevronRight } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { navItems, type NavItem } from '@/config/nav';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,6 +52,27 @@ export function SidebarNav() {
     return () => unsubscribe();
   }, []); // Empty dependency array means this effect runs once on mount and clean up on unmount
 
+  const [openItems, setOpenItems] = useState<string[]>(['Leads']); // Default open Leads menu
+
+  const toggleItem = (itemLabel: string) => {
+    setOpenItems(prev => 
+      prev.includes(itemLabel) 
+        ? prev.filter(item => item !== itemLabel)
+        : [...prev, itemLabel]
+    );
+  };
+
+  const isItemActive = (item: NavItem): boolean => {
+    if (item.href) {
+      // Only exact match for items with href
+      return pathname === item.href;
+    }
+    
+    // For parent items without href (like "Transactions"), don't mark as active
+    // Only the specific child should be active
+    return false;
+  };
+
   const groupedNavItems = navItems.reduce((acc, item) => {
     const groupName = item.group || 'General';
     if (!acc[groupName]) {
@@ -72,13 +97,45 @@ export function SidebarNav() {
             <SidebarGroup key={groupName}>
               {groupName !== 'General' && <SidebarGroupLabel>{groupName}</SidebarGroupLabel>}
               {items.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <Link href={item.href}>
-                    <SidebarMenuButton isActive={pathname === item.href || (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))}>
-                      <item.icon />
-                      <span className="ml-2">{item.label}</span>
-                    </SidebarMenuButton>
-                  </Link>
+                <SidebarMenuItem key={item.label}>
+                  {item.children ? (
+                    <div>
+                      <SidebarMenuButton 
+                        isActive={isItemActive(item)}
+                        onClick={() => toggleItem(item.label)}
+                        className="w-full justify-between"
+                      >
+                        <div className="flex items-center">
+                          <item.icon />
+                          <span className="ml-2">{item.label}</span>
+                        </div>
+                        <ChevronRight className={`h-4 w-4 transition-transform ${
+                          openItems.includes(item.label) ? 'rotate-90' : ''
+                        }`} />
+                      </SidebarMenuButton>
+                      {openItems.includes(item.label) && (
+                        <SidebarMenuSub>
+                          {item.children.map((child) => (
+                            <SidebarMenuSubItem key={child.href}>
+                              <SidebarMenuSubButton asChild isActive={isItemActive(child)}>
+                                <Link href={child.href!}>
+                                  <child.icon />
+                                  <span>{child.label}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      )}
+                    </div>
+                  ) : (
+                    <Link href={item.href!}>
+                      <SidebarMenuButton isActive={isItemActive(item)}>
+                        <item.icon />
+                        <span className="ml-2">{item.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarGroup>
