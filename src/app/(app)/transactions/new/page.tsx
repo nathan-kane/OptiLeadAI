@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, addDoc, setDoc, doc, serverTimestamp, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, addDoc, setDoc, doc, serverTimestamp, query, orderBy, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,16 @@ interface ServicePartner {
 interface Lead {
   id: string;
   name: string;
+  fullName?: string;
+  status?: string;
   email?: string;
   phone?: string;
+  phoneNumber?: string;
   address?: string;
   city?: string;
   state?: string;
   zipcode?: string;
+  contactStatus?: string;
 }
 
 export default function NewTransactionPage() {
@@ -128,21 +132,32 @@ export default function NewTransactionPage() {
     }
   };
 
-  // Fetch leads from user's collection
+  // Fetch leads from user's collection with Contact Status filter
   const fetchLeads = async () => {
     if (!currentUser) return;
 
     try {
-      const leadsSnap = await getDocs(
-        query(collection(db, `users/${currentUser.uid}/leads`), orderBy('name'))
+      console.log('Fetching leads for user:', currentUser.uid);
+      
+      // First try to get all leads to see what's available
+      const allLeadsSnap = await getDocs(
+        collection(db, `users/${currentUser.uid}/leads`)
       );
       
-      const leadsData = leadsSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Lead[];
+      console.log('Total leads found:', allLeadsSnap.docs.length);
       
-      setLeads(leadsData);
+      // Filter for contacted leads
+      const contactedLeads = allLeadsSnap.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Lead))
+        .filter(lead => lead.contactStatus === 'Contacted')
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      
+      console.log('Contacted leads found:', contactedLeads.length, contactedLeads);
+      
+      setLeads(contactedLeads as Lead[]);
     } catch (error) {
       console.error('Error fetching leads:', error);
     }
@@ -163,13 +178,18 @@ export default function NewTransactionPage() {
     
     if (selectedLead) {
       // Auto-populate client fields from lead data
+      const leadName = selectedLead.fullName || selectedLead.name || '';
+      const nameParts = leadName.split(' ');
+      
       setFormData(prev => ({
         ...prev,
         leadId: leadId,
-        clientFirstName: selectedLead.name.split(' ')[0] || '',
-        clientLastName: selectedLead.name.split(' ').slice(1).join(' ') || '',
+        clientType: selectedLead.status || selectedLead.contactStatus || '',
+        clientFirstName: nameParts[0] || '',
+        clientLastName: nameParts.slice(1).join(' ') || '',
         clientEmail: selectedLead.email || '',
-        clientCellPhone: selectedLead.phone || '',
+        clientCellPhone: selectedLead.phoneNumber || selectedLead.phone || '',
+        clientHomePhone: selectedLead.phoneNumber || selectedLead.phone || '',
         propertyAddress: selectedLead.address || '',
         propertyCity: selectedLead.city || '',
         propertyState: selectedLead.state || '',
@@ -294,7 +314,7 @@ export default function NewTransactionPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">Lead Selection</h3>
               <div>
-                <Label htmlFor="leadId">Select Lead (Optional)</Label>
+                <Label htmlFor="leadId">Select Lead (Optional) - {leads.length} contacted leads found</Label>
                 <Select 
                   value={formData.leadId} 
                   onValueChange={(value) => handleLeadSelection(value)}
@@ -306,12 +326,12 @@ export default function NewTransactionPage() {
                     <SelectItem value="none">No lead selected</SelectItem>
                     {leads.map((lead) => (
                       <SelectItem key={lead.id} value={lead.id}>
-                        {lead.name}
+                        {lead.fullName || lead.name || `Lead ${lead.id}`} - {lead.status || lead.contactStatus || 'Unknown Status'}
                       </SelectItem>
                     ))}
                     {leads.length === 0 && (
                       <SelectItem value="no-leads" disabled>
-                        No leads found
+                        No contacted leads found
                       </SelectItem>
                     )}
                   </SelectContent>
