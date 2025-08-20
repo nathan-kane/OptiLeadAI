@@ -1,6 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User, CreditCard, DollarSign, Plus, Building2, Home, Search, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, Target, MailCheck, Workflow, BarChart3, Settings, Users, User, CreditCard, DollarSign, Plus, Building2, Home, Search, ClipboardCheck, UserCheck } from 'lucide-react';
 
 export interface NavItem {
   href?: string;
@@ -30,6 +30,18 @@ export const navItems: NavItem[] = [
         href: '/analytics',
         label: 'Analytics',
         icon: BarChart3,
+      },
+    ],
+  },
+  {
+    label: 'Clients',
+    icon: Users,
+    group: 'CRM / Client Management',
+    children: [
+      {
+        href: '/clients',
+        label: 'Clients Dashboard',
+        icon: LayoutDashboard,
       },
     ],
   },

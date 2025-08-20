@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit3, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { MoreHorizontal, Edit3, AlertTriangle, CheckCircle2, Info, Trash2, Check, X } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/client';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { AddLeadForm } from '@/components/add-lead-form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -72,6 +73,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -184,6 +186,136 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteLead = async (leadId: string, leadName: string) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Delete the lead from Firestore
+      const leadRef = doc(db, "users", userId, "leads", leadId);
+      await deleteDoc(leadRef);
+
+      // Update local state immediately for better UX
+      setLeads(prevLeads => prevLeads.filter(lead => lead.id !== leadId));
+
+      toast({
+        title: "Lead Deleted",
+        description: `${leadName} has been successfully deleted.`,
+        variant: "default",
+      });
+
+      console.log(`Successfully deleted lead ${leadId}`);
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete lead. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Selection helper functions
+  const handleSelectLead = (leadId: string, checked: boolean) => {
+    setSelectedLeads(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(leadId);
+      } else {
+        newSet.delete(leadId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedLeads(new Set(leads.map(lead => lead.id)));
+    } else {
+      setSelectedLeads(new Set());
+    }
+  };
+
+  const isAllSelected = leads.length > 0 && selectedLeads.size === leads.length;
+  const isIndeterminate = selectedLeads.size > 0 && selectedLeads.size < leads.length;
+
+  // Bulk action handlers
+  const handleBulkDelete = async () => {
+    if (!userId || selectedLeads.size === 0) return;
+
+    try {
+      const deletePromises = Array.from(selectedLeads).map(leadId => {
+        const leadRef = doc(db, "users", userId, "leads", leadId);
+        return deleteDoc(leadRef);
+      });
+
+      await Promise.all(deletePromises);
+
+      // Update local state
+      setLeads(prevLeads => prevLeads.filter(lead => !selectedLeads.has(lead.id)));
+      setSelectedLeads(new Set());
+
+      toast({
+        title: "Leads Deleted",
+        description: `Successfully deleted ${selectedLeads.size} lead(s).`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error deleting leads:", error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete some leads. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkStatusUpdate = async (newStatus: Lead['contactStatus']) => {
+    if (!userId || selectedLeads.size === 0) return;
+
+    try {
+      const updatePromises = Array.from(selectedLeads).map(leadId => {
+        const leadRef = doc(db, "users", userId, "leads", leadId);
+        return updateDoc(leadRef, {
+          contactStatus: newStatus,
+          lastInteraction: new Date().toISOString(),
+          updatedAt: new Date()
+        });
+      });
+
+      await Promise.all(updatePromises);
+
+      // Update local state
+      setLeads(prevLeads => 
+        prevLeads.map(lead => 
+          selectedLeads.has(lead.id) 
+            ? { ...lead, contactStatus: newStatus, lastInteraction: new Date().toISOString() }
+            : lead
+        )
+      );
+      setSelectedLeads(new Set());
+
+      toast({
+        title: "Status Updated",
+        description: `Successfully updated ${selectedLeads.size} lead(s) to ${newStatus}.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error updating leads:", error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update some leads. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   return (
     <>
@@ -238,10 +370,86 @@ export default function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0 sm:px-6 py-2">
+          {/* Bulk Actions Bar */}
+          {selectedLeads.size > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-blue-900">
+                {selectedLeads.size} lead(s) selected
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate('Contacted')}
+                  className="text-xs"
+                >
+                  <Edit3 className="mr-1 h-3 w-3" /> Mark as Contacted
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate('Qualified')}
+                  className="text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  <CheckCircle2 className="mr-1 h-3 w-3" /> Mark as Qualified
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate('Nurturing')}
+                  className="text-xs text-orange-600 border-orange-200 hover:bg-orange-50"
+                >
+                  <Info className="mr-1 h-3 w-3" /> Mark as Nurturing
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate('Converted')}
+                  className="text-xs text-green-600 border-green-200 hover:bg-green-50"
+                >
+                  <Check className="mr-1 h-3 w-3" /> Mark as Converted
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate('Rejected')}
+                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <X className="mr-1 h-3 w-3" /> Mark as Rejected
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate('Disqualified')}
+                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <AlertTriangle className="mr-1 h-3 w-3" /> Mark as Disqualified
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkDelete}
+                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 className="mr-1 h-3 w-3" /> Delete Selected
+                </Button>
+              </div>
+            </div>
+          )}
+          
           <div className="w-full overflow-x-auto">
-            <Table className="min-w-[700px]">
+            <Table className="min-w-[750px]">
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all leads"
+                      className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
+                      {...(isIndeterminate && { 'data-state': 'indeterminate' })}
+                    />
+                  </TableHead>
                   <TableHead className="text-xs sm:text-sm">Name</TableHead>
                   <TableHead className="text-xs sm:text-sm">Phone</TableHead>
                   <TableHead className="text-xs sm:text-sm">Type</TableHead>
@@ -252,7 +460,6 @@ export default function DashboardPage() {
                   <TableHead className="text-xs sm:text-sm">Quality</TableHead>
                   <TableHead className="text-xs sm:text-sm">Next Step</TableHead>
                   <TableHead className="text-xs sm:text-sm">Created Date</TableHead>
-                  <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -269,6 +476,13 @@ export default function DashboardPage() {
                 ) : (
                   leads.map((lead: any) => (
                     <TableRow key={lead.id} className="text-xs sm:text-sm">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedLeads.has(lead.id)}
+                          onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
+                          aria-label={`Select ${lead.fullName || 'lead'}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{lead.fullName || 'N/A'}</TableCell>
                       <TableCell>{lead.phoneNumber || 'N/A'}</TableCell>
                       <TableCell>
@@ -291,28 +505,6 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell>{lead.nextStep || 'N/A'}</TableCell>
                       <TableCell>{lead.createdAt ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Contacted')}>
-                              <Edit3 className="mr-2 h-4 w-4" /> Mark as Contacted
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Converted')} className="text-green-600">
-                              Mark as Converted
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(lead.id, 'Disqualified')} className="text-red-600">
-                              Mark as Disqualified
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
                     </TableRow>
                   ))
                 )}

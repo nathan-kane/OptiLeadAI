@@ -70,3 +70,22 @@ export interface AnalyticsData {
   };
   emailCampaignPerformance: Array<{ campaignName: string; openRate: number; ctr: number }>;
 }
+
+export interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  status: 'Active' | 'Inactive' | 'Prospect' | 'Past Client';
+  notes?: string;
+  preferredContactMethod?: 'email' | 'phone' | 'text' | 'mail';
+  dateOfBirth?: string;
+  occupation?: string;
+  company?: string;
+  createdAt?: any; // Firestore timestamp
+  updatedAt?: any; // Firestore timestamp
+}
