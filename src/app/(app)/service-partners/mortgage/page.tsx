@@ -160,18 +160,6 @@ export default function MortgageCompaniesPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm">
-                      {company.cellPhone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Cell: {company.cellPhone}</span>
-                        </div>
-                      )}
-                      {company.officePhone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Office: {company.officePhone}</span>
-                        </div>
-                      )}
                       {company.email && (
                         <div className="flex items-center gap-1">
                           <Mail className="h-4 w-4 text-muted-foreground" />
@@ -185,9 +173,23 @@ export default function MortgageCompaniesPage() {
                     <Badge variant="secondary" className="mb-2">
                       Primary Contact
                     </Badge>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium mb-4">
                       {company.primaryContact || 'N/A'}
                     </p>
+                    <div className="space-y-2">
+                      {company.cellPhone && (
+                        <div className="flex items-center justify-end gap-1 text-sm">
+                          <span className="font-medium">Cell: {company.cellPhone}</span>
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      {company.officePhone && (
+                        <div className="flex items-center justify-end gap-1 text-sm">
+                          <span className="font-medium">Office: {company.officePhone}</span>
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
