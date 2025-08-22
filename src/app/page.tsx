@@ -139,7 +139,7 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div className="flex justify-center max-w-5xl mx-auto">
               {/* Basic Plan */}
               <div className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow duration-300">
                 <div className="text-center mb-8">
@@ -203,83 +203,6 @@ export default function LandingPage() {
                 
                 <CheckoutButton planType="basic" size="lg" className="w-full">
                   Get Started with Basic
-                </CheckoutButton>
-              </div>
-              
-              {/* Gold Plan */}
-              <div className="relative bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl shadow-xl border-2 border-yellow-400 p-8 hover:shadow-2xl transition-shadow duration-300">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                    Most Popular
-                  </span>
-                </div>
-                
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Gold</h3>
-                  <p className="text-gray-600 mb-6">Advanced AI for enterprise teams</p>
-                  <div className="flex items-baseline justify-center">
-                    <span className="text-5xl font-bold text-gray-900">$1,999</span>
-                    <span className="text-xl text-gray-600 ml-2">/month</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">Everything in Basic, plus:</p>
-                </div>
-                
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">All Basic Features</p>
-                      <p className="text-sm text-gray-600">Complete access to all Basic plan capabilities</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">AI Agent Script Enhancements</p>
-                      <p className="text-sm text-gray-600">Advanced script optimization from call transcript analysis</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">RAG Knowledge Base</p>
-                      <p className="text-sm text-gray-600">Retrieval-Augmented Generation for intelligent responses</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">Follow-up Call Recording & Analysis</p>
-                      <p className="text-sm text-gray-600">Advanced call analysis and training insights</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <CheckoutButton 
-                  planType="gold" 
-                  size="lg" 
-                  className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white border-0"
-                >
-                  Upgrade to Gold
                 </CheckoutButton>
               </div>
             </div>
