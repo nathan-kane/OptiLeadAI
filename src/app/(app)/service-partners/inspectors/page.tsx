@@ -163,7 +163,13 @@ export default function InspectorsPage() {
                       {company.cellPhone && (
                         <div className="flex items-center gap-1">
                           <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{company.cellPhone}</span>
+                          <span className="font-medium">Cell: {company.cellPhone}</span>
+                        </div>
+                      )}
+                      {company.officePhone && (
+                        <div className="flex items-center gap-1">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">Office: {company.officePhone}</span>
                         </div>
                       )}
                       {company.email && (
