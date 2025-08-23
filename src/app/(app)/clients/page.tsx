@@ -178,25 +178,25 @@ export default function ClientsPage() {
             placeholder="Search clients..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
           />
         </div>
 
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200">
               <Plus className="mr-2 h-4 w-4" />
               Add New Client
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Client</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="sm:max-w-[425px] rounded-2xl border-0 shadow-xl">
+            <DialogHeader className="px-6 py-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-t-2xl border-b border-gray-100">
+              <DialogTitle className="text-xl font-extrabold text-slate-900">Add New Client</DialogTitle>
+              <DialogDescription className="text-slate-600">
                 Enter the client's information below.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 p-6">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Name *
@@ -205,7 +205,7 @@ export default function ClientsPage() {
                   id="name"
                   value={newClient.name}
                   onChange={(e) => setNewClient(prev => ({ ...prev, name: e.target.value }))}
-                  className="col-span-3"
+                  className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -217,7 +217,7 @@ export default function ClientsPage() {
                   type="email"
                   value={newClient.email}
                   onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
-                  className="col-span-3"
+                  className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -228,7 +228,7 @@ export default function ClientsPage() {
                   id="phone"
                   value={newClient.phone}
                   onChange={(e) => setNewClient(prev => ({ ...prev, phone: e.target.value }))}
-                  className="col-span-3"
+                  className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -239,7 +239,7 @@ export default function ClientsPage() {
                   id="address"
                   value={newClient.address}
                   onChange={(e) => setNewClient(prev => ({ ...prev, address: e.target.value }))}
-                  className="col-span-3"
+                  className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -250,7 +250,7 @@ export default function ClientsPage() {
                   id="city"
                   value={newClient.city}
                   onChange={(e) => setNewClient(prev => ({ ...prev, city: e.target.value }))}
-                  className="col-span-3"
+                  className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -262,7 +262,7 @@ export default function ClientsPage() {
                     id="state"
                     value={newClient.state}
                     onChange={(e) => setNewClient(prev => ({ ...prev, state: e.target.value }))}
-                    className="col-span-3"
+                    className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -273,13 +273,13 @@ export default function ClientsPage() {
                     id="zipCode"
                     value={newClient.zipCode}
                     onChange={(e) => setNewClient(prev => ({ ...prev, zipCode: e.target.value }))}
-                    className="col-span-3"
+                    className="col-span-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="submit" onClick={handleAddClient}>
+            <DialogFooter className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+              <Button type="submit" onClick={handleAddClient} className="rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200">
                 Add Client
               </Button>
             </DialogFooter>
@@ -288,15 +288,15 @@ export default function ClientsPage() {
       </div>
 
       {/* Clients Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Clients</CardTitle>
-          <CardDescription>
+      <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+          <CardTitle className="text-2xl font-extrabold text-slate-900">Clients</CardTitle>
+          <CardDescription className="text-base text-slate-600">
             {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
+        <CardContent className="p-6">
+          <div className="rounded-2xl border border-gray-200 overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -323,7 +323,7 @@ export default function ClientsPage() {
                   filteredClients.map((client: any) => (
                     <TableRow 
                       key={client.id} 
-                      className="text-xs sm:text-sm cursor-pointer hover:bg-muted/50"
+                      className="text-xs sm:text-sm cursor-pointer hover:bg-blue-50/50 transition-colors"
                       onClick={() => handleClientClick(client.id)}
                     >
                       <TableCell className="font-medium">

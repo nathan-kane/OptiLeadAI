@@ -93,16 +93,16 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <PageHeader
           title="Conversion Analytics"
           description="Track your lead generation performance and campaign effectiveness."
         />
         <Select value={selectedPeriod} onValueChange={(value: TimePeriod) => setSelectedPeriod(value)}>
-          <SelectTrigger className="w-[120px]">
+          <SelectTrigger className="w-[140px] rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl border-2 border-gray-200">
             <SelectItem value="daily">Daily</SelectItem>
             <SelectItem value="weekly">Weekly</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
@@ -110,27 +110,27 @@ export default function AnalyticsPage() {
           </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-        <Card className="lg:col-span-2 xl:col-span-3">
-          <CardHeader>
-            <CardTitle>Leads by Priority</CardTitle>
-            <CardDescription>Distribution of leads across High, Medium, and Low priority categories over time.</CardDescription>
+      <div className="grid gap-8 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <Card className="lg:col-span-2 xl:col-span-3 shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+          <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+            <CardTitle className="text-2xl font-extrabold text-slate-900">Leads by Priority</CardTitle>
+            <CardDescription className="text-base text-slate-600">Distribution of leads across High, Medium, and Low priority categories over time.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <ChartContainer config={{
-              High: { label: "High Priority", color: "hsl(var(--chart-1))" },
-              Medium: { label: "Medium Priority", color: "hsl(var(--chart-2))" },
-              Low: { label: "Low Priority", color: "hsl(var(--chart-3))" },
-            }} className="h-[300px] w-full">
+              High: { label: "High Priority", color: "#dc2626" },
+              Medium: { label: "Medium Priority", color: "#2563eb" },
+              Low: { label: "Low Priority", color: "#16a34a" },
+            }} className="h-[350px] w-full">
               <BarChart data={chartData} margin={{ left: 12, right: 12, top: 5, bottom: 5 }}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} className="text-slate-600" />
+                <YAxis tickLine={false} axisLine={false} tickMargin={8} className="text-slate-600" />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="High" fill="var(--color-High)" radius={4} />
-                <Bar dataKey="Medium" fill="var(--color-Medium)" radius={4} />
-                <Bar dataKey="Low" fill="var(--color-Low)" radius={4} />
+                <Bar dataKey="High" fill="var(--color-High)" radius={6} />
+                <Bar dataKey="Medium" fill="var(--color-Medium)" radius={6} />
+                <Bar dataKey="Low" fill="var(--color-Low)" radius={6} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -138,23 +138,28 @@ export default function AnalyticsPage() {
 
 
 
-        <Card className="lg:col-span-2 xl:col-span-3">
-          <CardHeader>
-            <CardTitle>Lead Conversion Funnel</CardTitle>
-            <CardDescription>Number of leads at each stage of the funnel over time.</CardDescription>
+        <Card className="lg:col-span-2 xl:col-span-3 shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+          <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+            <CardTitle className="text-2xl font-extrabold text-slate-900">Lead Conversion Funnel</CardTitle>
+            <CardDescription className="text-base text-slate-600">Number of leads at each stage of the funnel over time.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigConversion} className="h-[300px] w-full">
+          <CardContent className="p-6">
+            <ChartContainer config={{
+              New: { label: "New Leads", color: "#64748b" },
+              Contacted: { label: "Contacted", color: "#2563eb" },
+              Qualified: { label: "Qualified", color: "#16a34a" },
+              Converted: { label: "Converted", color: "#059669" },
+            }} className="h-[350px] w-full">
               <BarChart data={conversionChartData} margin={{ left: 12, right: 12, top: 5, bottom: 5 }}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} className="text-slate-600" />
+                <YAxis tickLine={false} axisLine={false} tickMargin={8} className="text-slate-600" />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="New" fill="var(--color-New)" radius={4} />
-                <Bar dataKey="Contacted" fill="var(--color-Contacted)" radius={4} />
-                <Bar dataKey="Qualified" fill="var(--color-Qualified)" radius={4} />
-                <Bar dataKey="Converted" fill="var(--color-Converted)" radius={4} />
+                <Bar dataKey="New" fill="var(--color-New)" radius={6} />
+                <Bar dataKey="Contacted" fill="var(--color-Contacted)" radius={6} />
+                <Bar dataKey="Qualified" fill="var(--color-Qualified)" radius={6} />
+                <Bar dataKey="Converted" fill="var(--color-Converted)" radius={6} />
               </BarChart>
             </ChartContainer>
           </CardContent>

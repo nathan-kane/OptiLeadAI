@@ -327,34 +327,34 @@ export default function DashboardPage() {
       
       {/* Checkout Prompt Card */}
       {showCheckoutPrompt && selectedPlan && (
-        <div className="mb-6">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-900">
+        <div className="mb-8">
+          <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+            <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+              <CardTitle className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
                 🎉 Welcome to OptiLeadAI!
               </CardTitle>
-              <CardDescription className="text-blue-700">
+              <CardDescription className="text-base text-slate-600">
                 Complete your {selectedPlan === 'basic' ? 'Basic' : 'Gold'} plan subscription to start using all features.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-4">
               <div className="flex flex-col sm:flex-row gap-3">
                 <CheckoutButton 
                   planType={selectedPlan as 'basic' | 'gold'}
                   size="lg"
-                  className="flex-1"
+                  className="flex-1 rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200"
                 >
                   Complete {selectedPlan === 'basic' ? 'Basic' : 'Gold'} Plan Purchase
                 </CheckoutButton>
                 <Button 
                   variant="outline" 
                   onClick={() => setShowCheckoutPrompt(false)}
-                  className="flex-1 sm:flex-none"
+                  className="flex-1 sm:flex-none rounded-full border-2 border-gray-300 hover:border-blue-500 transition-colors"
                 >
                   Skip for Now
                 </Button>
               </div>
-              <p className="text-sm text-blue-600">
+              <p className="text-sm text-slate-600">
                 You can always upgrade later from your billing settings.
               </p>
             </CardContent>
@@ -362,74 +362,67 @@ export default function DashboardPage() {
         </div>
       )}
       
-      <Card>
-        <CardHeader className="px-2 sm:px-6 py-4">
-          <CardTitle className="text-lg sm:text-2xl">Active Leads</CardTitle>
-          <CardDescription className="text-xs sm:text-base">
+      <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="px-2 sm:px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-slate-900">Active Leads</CardTitle>
+          <CardDescription className="text-base sm:text-lg text-slate-600">
             {isLoading ? "Loading leads..." : `Showing ${leads.length} leads. Interact with them using the actions menu.`}
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-0 sm:px-6 py-2">
+        <CardContent className="px-0 sm:px-6 py-4">
           {/* Bulk Actions Bar */}
           {selectedLeads.size > 0 && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-blue-900">
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-200 rounded-2xl flex flex-wrap items-center gap-3 shadow-lg">
+              <span className="text-base font-bold text-slate-900">
                 {selectedLeads.size} lead(s) selected
               </span>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => handleBulkStatusUpdate('Contacted')}
-                  className="text-xs"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <Edit3 className="mr-1 h-3 w-3" /> Mark as Contacted
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => handleBulkStatusUpdate('Qualified')}
-                  className="text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <CheckCircle2 className="mr-1 h-3 w-3" /> Mark as Qualified
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => handleBulkStatusUpdate('Nurturing')}
-                  className="text-xs text-orange-600 border-orange-200 hover:bg-orange-50"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <Info className="mr-1 h-3 w-3" /> Mark as Nurturing
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => handleBulkStatusUpdate('Converted')}
-                  className="text-xs text-green-600 border-green-200 hover:bg-green-50"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <Check className="mr-1 h-3 w-3" /> Mark as Converted
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => handleBulkStatusUpdate('Rejected')}
-                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <X className="mr-1 h-3 w-3" /> Mark as Rejected
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => handleBulkStatusUpdate('Disqualified')}
-                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <AlertTriangle className="mr-1 h-3 w-3" /> Mark as Disqualified
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={handleBulkDelete}
-                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                  className="text-xs px-4 py-2 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold hover:scale-105 transition-all duration-200"
                 >
                   <Trash2 className="mr-1 h-3 w-3" /> Delete Selected
                 </Button>
@@ -437,7 +430,7 @@ export default function DashboardPage() {
             </div>
           )}
           
-          <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto rounded-2xl border border-gray-200">
             <Table className="min-w-[750px]">
               <TableHeader>
                 <TableRow>

@@ -294,35 +294,35 @@ export default function NewTransactionPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-8">
         <Link href="/transactions">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" className="rounded-full border-2 border-gray-300 hover:border-blue-500 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Transactions
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold">New Transaction</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900">New Transaction</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction Details</CardTitle>
+      <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+          <CardTitle className="text-2xl font-extrabold text-slate-900">Transaction Details</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Lead Selection */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Lead Selection</h3>
+              <h3 className="text-xl font-extrabold text-slate-900 border-b-2 border-blue-200 pb-2">Lead Selection</h3>
               <div>
                 <Label htmlFor="leadId">Select Lead (Optional) - {leads.length} contacted leads found</Label>
                 <Select 
                   value={formData.leadId} 
                   onValueChange={(value) => handleLeadSelection(value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors">
                     <SelectValue placeholder="Select a lead to auto-populate client info" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl border-2 border-gray-200">
                     <SelectItem value="none">No lead selected</SelectItem>
                     {leads.map((lead) => (
                       <SelectItem key={lead.id} value={lead.id}>
@@ -341,7 +341,7 @@ export default function NewTransactionPage() {
 
             {/* Client Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Client Information</h3>
+              <h3 className="text-xl font-extrabold text-slate-900 border-b-2 border-blue-200 pb-2">Client Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="clientFirstName">First Name</Label>
@@ -350,6 +350,7 @@ export default function NewTransactionPage() {
                     value={formData.clientFirstName}
                     onChange={(e) => handleInputChange('clientFirstName', e.target.value)}
                     placeholder="Enter client first name"
+                    className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                   />
                 </div>
                 <div>
@@ -359,6 +360,7 @@ export default function NewTransactionPage() {
                     value={formData.clientLastName}
                     onChange={(e) => handleInputChange('clientLastName', e.target.value)}
                     placeholder="Enter client last name"
+                    className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
@@ -367,10 +369,10 @@ export default function NewTransactionPage() {
                 <div>
                   <Label htmlFor="clientType">Client Type</Label>
                   <Select value={formData.clientType} onValueChange={(value) => handleInputChange('clientType', value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors">
                       <SelectValue placeholder="Select client type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl border-2 border-gray-200">
                       <SelectItem value="Buyer">Buyer</SelectItem>
                       <SelectItem value="Seller">Seller</SelectItem>
                       <SelectItem value="Renter">Renter</SelectItem>
@@ -386,6 +388,7 @@ export default function NewTransactionPage() {
                     value={formData.clientEmail}
                     onChange={(e) => handleInputChange('clientEmail', e.target.value)}
                     placeholder="Enter client email"
+                    className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
@@ -769,13 +772,13 @@ export default function NewTransactionPage() {
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button type="submit" disabled={loading} className="flex-1">
+            <div className="flex gap-4 pt-6">
+              <Button type="submit" disabled={loading} className="flex-1 rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200">
                 <Save className="mr-2 h-4 w-4" />
                 {loading ? 'Creating...' : 'Create Transaction'}
               </Button>
               <Link href="/transactions">
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" className="rounded-full border-2 border-gray-300 hover:border-blue-500 transition-colors">
                   Cancel
                 </Button>
               </Link>

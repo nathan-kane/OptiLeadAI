@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader } from '@/components/page-header';
 import { Plus, DollarSign, MapPin, User, Hash } from 'lucide-react';
 import Link from 'next/link';
 
@@ -124,13 +125,15 @@ export default function TransactionsPage() {
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Transactions Dashboard</h1>
-          <Skeleton className="h-10 w-32" />
+        <div className="flex justify-between items-center mb-8">
+          <div className="bg-gradient-to-r from-blue-100 to-green-100 px-6 py-3 rounded-2xl">
+            <h1 className="text-3xl font-extrabold text-slate-900">Transactions Dashboard</h1>
+          </div>
+          <Skeleton className="h-10 w-32 rounded-full" />
         </div>
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
+            <Skeleton key={i} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
       </div>
@@ -139,26 +142,21 @@ export default function TransactionsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Transactions Dashboard</h1>
-        <Link href="/transactions/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Transaction
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+              title="Transactions Dashboard"
+              description="Manage your Transactions."
+            />
 
       {transactions.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <DollarSign className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Transactions Found</h3>
-            <p className="text-gray-500 text-center mb-4">
+        <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+          <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+            <DollarSign className="h-12 w-12 text-slate-400 mb-4" />
+            <h3 className="text-xl font-extrabold text-slate-900 mb-2">No Transactions Found</h3>
+            <p className="text-slate-600 text-center mb-6">
               You haven't created any transactions yet. Get started by creating your first transaction.
             </p>
             <Link href="/transactions/new">
-              <Button>
+              <Button className="rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Transaction
               </Button>
@@ -166,25 +164,33 @@ export default function TransactionsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {transactions.map((transaction) => (
-            <Card key={transaction.id} className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-6">
+        <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+          <CardHeader className="px-2 sm:px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+            <CardTitle className="text-2xl sm:text-3xl font-extrabold text-slate-900">Transactions</CardTitle>
+            <CardDescription className="text-base sm:text-lg text-slate-600">
+              Showing {transactions.length} transactions. Manage your real estate deals.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-0 sm:px-6 py-4">
+            <div className="grid gap-6">
+              {transactions.map((transaction) => (
+                <Card key={transaction.id} className="shadow-lg border border-gray-200 bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer">
+                  <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <User className="h-4 w-4 text-blue-600" />
                       <Link href={`/transactions/${transaction.clientId}/${transaction.id}`}>
-                        <h3 className="font-semibold text-blue-600 hover:underline cursor-pointer">
+                        <h3 className="font-extrabold text-slate-900 hover:text-blue-600 transition-colors cursor-pointer">
                           {transaction.clientName}
                         </h3>
                       </Link>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs rounded-full border-2 border-blue-200 text-blue-700">
                         {transaction.clientType}
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                    <div className="flex items-center gap-2 text-slate-600 mb-2">
                       <MapPin className="h-4 w-4" />
                       <span className="text-sm">
                         {transaction.propertyAddress}, {transaction.propertyCity}, {transaction.propertyState}
@@ -194,19 +200,20 @@ export default function TransactionsPage() {
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="font-medium">
+                        <span className="font-semibold text-slate-900">
                           Price: {formatCurrency(transaction.contractPrice)}
                         </span>
                       </div>
-                      <div>
-                        Status: <Badge className={getStatusColor(transaction.trxnStatus)}>
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-600">Status:</span>
+                        <Badge className={`${getStatusColor(transaction.trxnStatus)} rounded-full font-medium`}>
                           {transaction.trxnStatus}
                         </Badge>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="text-right text-sm text-gray-500">
+                  <div className="text-right text-sm text-slate-500">
                     <div className="flex items-center gap-1 mb-1">
                       <Hash className="h-3 w-3" />
                       <span>MLS#: {transaction.mlsNumber}</span>
@@ -216,15 +223,17 @@ export default function TransactionsPage() {
                 
                 <div className="flex justify-end">
                   <Link href={`/transactions/${transaction.clientId}/${transaction.id}`}>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="rounded-full border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200">
                       View Details
                     </Button>
                   </Link>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -155,90 +155,95 @@ export default function ProspectingPage() {
 
   return (
     <>
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto">
       <PageHeader 
           title="Prospecting Campaigns"
           description="Upload a list of leads, select a prompt, and start your AI-powered calling campaign."
       />
-      <Card>
-        <CardHeader>
-          <CardTitle>1. Upload Your Lead List</CardTitle>
-          <CardDescription>Upload a CSV file with 'Name' and 'Phone' columns.</CardDescription>
+      <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+          <CardTitle className="text-2xl font-extrabold text-slate-900">1. Upload Your Lead List</CardTitle>
+          <CardDescription className="text-base text-slate-600">Upload a CSV file with 'Name' and 'Phone' columns.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Input
-            type="file"
-            accept=".csv"
-            ref={fileInputRef}
-            onChange={handleCsvUpload}
-            className="max-w-sm"
-          />
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <Input
+              type="file"
+              accept=".csv"
+              ref={fileInputRef}
+              onChange={handleCsvUpload}
+              className="max-w-sm rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-colors"
+            />
+            <Upload className="h-6 w-6 text-blue-600" />
+          </div>
           {csvError && <p className="text-sm text-destructive mt-2">{csvError}</p>}
         </CardContent>
       </Card>
       
       {leads.length > 0 && (
-        <Card>
-           <CardHeader>
-              <CardTitle>Lead Preview</CardTitle>
-              <CardDescription>Showing the first 10 of {leads.length} loaded leads.</CardDescription>
+        <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+           <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+              <CardTitle className="text-2xl font-extrabold text-slate-900">Lead Preview</CardTitle>
+              <CardDescription className="text-base text-slate-600">Showing the first 10 of {leads.length} loaded leads.</CardDescription>
           </CardHeader>
-          <CardContent>
-              <Table>
-              <TableHeader>
-                  <TableRow>
-                  <TableHead>Full Name</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  </TableRow>
-              </TableHeader>
-              <TableBody>
-                  {leads.slice(0, 10).map((lead, idx) => (
-                  <TableRow key={idx}>
-                      <TableCell>{lead.fullName}</TableCell>
-                      <TableCell>{lead.phone}</TableCell>
-                  </TableRow>
-                  ))}
-              </TableBody>
-              </Table>
+          <CardContent className="p-0">
+              <div className="overflow-x-auto rounded-b-2xl border border-gray-200">
+                <Table>
+                <TableHeader>
+                    <TableRow className="bg-gray-50">
+                    <TableHead className="font-bold text-slate-900">Full Name</TableHead>
+                    <TableHead className="font-bold text-slate-900">Phone Number</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {leads.slice(0, 10).map((lead, idx) => (
+                    <TableRow key={idx} className="hover:bg-blue-50 transition-colors">
+                        <TableCell className="font-medium text-slate-900">{lead.fullName}</TableCell>
+                        <TableCell className="text-slate-600">{lead.phone}</TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+              </div>
           </CardContent>
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>2. Select a Prompt</CardTitle>
-          <CardDescription>Choose the AI script for this campaign.</CardDescription>
+      <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+          <CardTitle className="text-2xl font-extrabold text-slate-900">2. Select a Prompt</CardTitle>
+          <CardDescription className="text-base text-slate-600">Choose the AI script for this campaign.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <SystemPromptManager onPromptSelected={setSelectedPrompt} />
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>3. Start Campaign</CardTitle>
-          <CardDescription>Begin the AI calling sequence.</CardDescription>
+      <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="px-6 py-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-gray-100">
+          <CardTitle className="text-2xl font-extrabold text-slate-900">3. Start Campaign</CardTitle>
+          <CardDescription className="text-base text-slate-600">Begin the AI calling sequence.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <Button
             onClick={handleStartCampaign}
             disabled={campaignLoading || leads.length === 0 || !selectedPrompt}
-            className="w-full"
+            className="w-full rounded-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold text-lg py-4 shadow-lg hover:scale-105 transition-all duration-200 uppercase tracking-wide"
             size="lg"
           >
             {campaignLoading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> In Progress...</>
+              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> IN PROGRESS...</>
             ) : (
-              <><PhoneOutgoing className="mr-2 h-4 w-4" /> Start Calling Campaign</>
+              <><PhoneOutgoing className="mr-2 h-5 w-5" /> START CALLING CAMPAIGN</>
             )}
           </Button>
           {campaignStatus && (
-          <Alert className="mt-4">
-            <AlertTitle className="flex items-center gap-2">
-              {campaignLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+          <Alert className="mt-6 rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-green-50">
+            <AlertTitle className="flex items-center gap-2 text-slate-900 font-bold">
+              {campaignLoading ? <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> : <CheckCircle className="h-5 w-5 text-green-600" />}
               Campaign Status
             </AlertTitle>
-            <AlertDescription>
+            <AlertDescription className="text-slate-700 text-base">
               {campaignStatus}
             </AlertDescription>
           </Alert>
