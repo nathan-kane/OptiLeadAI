@@ -19,7 +19,7 @@ export default function LandingPage() {
           <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4 text-foreground/80" prefetch={false}>Pricing</Link>
           <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4 text-foreground/80" prefetch={false}>Login</Link>
           <Button asChild>
-            <Link href="#pricing" prefetch={false}>Request Beta</Link>
+            <Link href="#pricing" prefetch={false}>Get Started Now</Link>
           </Button>
         </nav>
       </header>
@@ -38,7 +38,7 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button size="lg" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Link href="#pricing">Request Beta Access</Link>
+                    <Link href="#pricing">Get Started Now</Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild className="border-blue-600 text-blue-600 hover:bg-blue-50">
                     <Link href="#how-it-works">See How It Works</Link>
@@ -121,7 +121,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col lg:flex-row justify-center gap-8 max-w-5xl mx-auto">
               <PricingCard
-                title="Starter"
+                title="Basic"
                 price="$150"
                 subtitle="Perfect for solo agents and small teams"
                 features={["Up to 1,000 AI calls/month", "Built-in CRM & pipeline", "Transcripts & call notes", "Email support"]}
