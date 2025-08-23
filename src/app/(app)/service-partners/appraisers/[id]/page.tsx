@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Save, Trash2, Search } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 
 interface AppraiserCompanyData {
   appraiserCompanyName: string;
@@ -201,23 +202,19 @@ export default function AppraiserCompanyDetailPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isNew ? 'Add New Appraiser' : 'Edit Appraiser'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isNew ? 'Create a new appraiser profile' : 'Update appraiser information'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={isNew ? 'Add New Appraiser' : 'Edit Appraiser'}
+        description={isNew ? 'Create a new appraiser profile' : 'Update appraiser information'}
+        actions={
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        }
+      />
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+          <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
             <Search className="h-5 w-5" />
             Appraiser Information
           </CardTitle>

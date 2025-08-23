@@ -318,12 +318,18 @@ export default function DashboardPage() {
 
 
   return (
-    <>
-      <PageHeader
-        title="Lead Prioritization Dashboard"
-        description="Focus on your most promising leads, sorted by AI score."
-        actions={<AddLeadForm />}
-      />
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <PageHeader
+            title="Lead Prioritization Dashboard"
+            description="Focus on your most promising leads, sorted by AI score."
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <AddLeadForm />
+        </div>
+      </div>
       
       {/* Checkout Prompt Card */}
       {showCheckoutPrompt && selectedPlan && (
@@ -516,6 +522,6 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

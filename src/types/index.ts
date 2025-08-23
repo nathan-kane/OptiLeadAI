@@ -73,14 +73,26 @@ export interface AnalyticsData {
 
 export interface Client {
   id: string;
-  name: string;
+  // Legacy fields (for backward compatibility)
+  name?: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   zipCode?: string;
-  status: 'Active' | 'Inactive' | 'Prospect' | 'Past Client';
+  // Actual database fields
+  clientFirstName?: string;
+  clientLastName?: string;
+  clientEmail?: string;
+  clientCellPhone?: string;
+  clientHomePhone?: string;
+  clientAddress?: string;
+  clientCity?: string;
+  clientState?: string;
+  clientZipCode?: string;
+  clientType?: string;
+  status?: 'Active' | 'Inactive' | 'Prospect' | 'Past Client';
   notes?: string;
   preferredContactMethod?: 'email' | 'phone' | 'text' | 'mail';
   dateOfBirth?: string;

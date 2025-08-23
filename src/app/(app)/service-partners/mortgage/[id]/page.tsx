@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, Save, Trash2, Building2 } from 'lucide-react';
 
 interface MortgageCompanyData {
@@ -203,23 +204,19 @@ export default function MortgageCompanyDetailPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isNew ? 'Add New Mortgage Company' : 'Edit Mortgage Company'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isNew ? 'Create a new mortgage company profile' : 'Update mortgage company information'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={isNew ? 'Add New Mortgage Company' : 'Edit Mortgage Company'}
+        description={isNew ? 'Create a new mortgage company profile' : 'Update mortgage company information'}
+        actions={
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        }
+      />
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+          <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
             <Building2 className="h-5 w-5" />
             Company Information
           </CardTitle>
@@ -361,7 +358,7 @@ export default function MortgageCompanyDetailPage() {
                   variant="destructive"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold uppercase hover:scale-105 transition-all duration-200"
                 >
                   <Trash2 className="h-4 w-4" />
                   {deleting ? 'Deleting...' : 'Delete Company'}
@@ -369,10 +366,10 @@ export default function MortgageCompanyDetailPage() {
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleBack}>
+              <Button variant="outline" onClick={handleBack} className="rounded-full border-2 border-gray-200 hover:border-blue-400 transition-all duration-200">
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
+              <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200">
                 <Save className="h-4 w-4" />
                 {saving ? 'Saving...' : 'Save Company'}
               </Button>

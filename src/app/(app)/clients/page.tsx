@@ -163,15 +163,18 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Clients Dashboard"
-        description="Manage your client relationships and information."
-      />
-
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <PageHeader
+            title="Clients Dashboard"
+            description="Manage your client relationships and information."
+          />
+        </div>
+      </div>
 
       {/* Search and Add Client */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input

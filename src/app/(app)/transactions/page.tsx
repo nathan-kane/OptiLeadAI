@@ -126,8 +126,11 @@ export default function TransactionsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
-          <div className="bg-gradient-to-r from-blue-100 to-green-100 px-6 py-3 rounded-2xl">
-            <h1 className="text-3xl font-extrabold text-slate-900">Transactions Dashboard</h1>
+          <div>
+            <PageHeader
+              title="Transactions Dashboard"
+              description="Loading your transactions..."
+            />
           </div>
           <Skeleton className="h-10 w-32 rounded-full" />
         </div>
@@ -142,10 +145,14 @@ export default function TransactionsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <PageHeader
-              title="Transactions Dashboard"
-              description="Manage your Transactions."
-            />
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <PageHeader
+            title="Transactions Dashboard"
+            description="Manage your Transactions."
+          />
+        </div>
+      </div>
 
       {transactions.length === 0 ? (
         <Card className="shadow-xl border-0 bg-white rounded-2xl overflow-hidden">

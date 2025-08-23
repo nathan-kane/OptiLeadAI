@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, User, MapPin, DollarSign, Calendar, Hash, Building, Phone, Mail, Save } from 'lucide-react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
 
 interface ClientData {
   clientId: string;
@@ -308,28 +309,33 @@ export default function TransactionDetailPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/transactions">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Transactions
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Edit Transaction</h1>
-        <Badge className={getStatusColor(transaction.trxnStatus)}>
-          {transaction.trxnStatus}
-        </Badge>
-        <Button onClick={handleSave} disabled={saving}>
-          <Save className="mr-2 h-4 w-4" />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
+      <PageHeader
+        title="Edit Transaction"
+        description={`Transaction for ${client.clientFirstName} ${client.clientLastName} - ${transaction.propertyAddress}`}
+        actions={
+          <div className="flex items-center gap-2">
+            <Link href="/transactions">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Transactions
+              </Button>
+            </Link>
+            <Badge className={getStatusColor(transaction.trxnStatus)}>
+              {transaction.trxnStatus}
+            </Badge>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid gap-6">
         {/* Client Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
               <User className="h-5 w-5" />
               Client Information
             </CardTitle>
@@ -440,8 +446,8 @@ export default function TransactionDetailPage() {
 
         {/* Property Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
               <MapPin className="h-5 w-5" />
               Property Information
             </CardTitle>
@@ -500,8 +506,8 @@ export default function TransactionDetailPage() {
 
         {/* Contract Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
               <DollarSign className="h-5 w-5" />
               Contract Information
             </CardTitle>
@@ -532,8 +538,8 @@ export default function TransactionDetailPage() {
 
         {/* Important Dates */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
               <Calendar className="h-5 w-5" />
               Important Dates
             </CardTitle>
@@ -618,8 +624,8 @@ export default function TransactionDetailPage() {
 
         {/* Service Partners */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center gap-2 font-extrabold text-slate-900 tracking-tight">
               <Building className="h-5 w-5" />
               Service Partners
             </CardTitle>
@@ -727,8 +733,8 @@ export default function TransactionDetailPage() {
         {/* Lead Information */}
         {transaction.leadId && (
           <Card>
-            <CardHeader>
-              <CardTitle>Lead Information</CardTitle>
+            <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+              <CardTitle className="font-extrabold text-slate-900 tracking-tight">Lead Information</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">

@@ -80,13 +80,13 @@ export default function ClientDetailPage() {
         console.log("ClientDetailPage: Fetched client data:", clientData);
         setClient(clientData);
         setFormData({
-          name: clientData.name || '',
-          email: clientData.email || '',
-          phone: clientData.phone || '',
-          address: clientData.address || '',
-          city: clientData.city || '',
-          state: clientData.state || '',
-          zipCode: clientData.zipCode || '',
+          name: `${clientData.clientFirstName || ''} ${clientData.clientLastName || ''}`.trim() || clientData.name || '',
+          email: clientData.clientEmail || clientData.email || '',
+          phone: clientData.clientCellPhone || clientData.clientHomePhone || clientData.phone || '',
+          address: clientData.clientAddress || clientData.address || '',
+          city: clientData.clientCity || clientData.city || '',
+          state: clientData.clientState || clientData.state || '',
+          zipCode: clientData.clientZipCode || clientData.zipCode || '',
           status: clientData.status || 'Active',
           notes: clientData.notes || '',
           preferredContactMethod: clientData.preferredContactMethod || 'email',
@@ -145,8 +145,27 @@ export default function ClientDetailPage() {
 
     try {
       const clientRef = doc(db, "users", userId, "clients", clientId);
+      
+      // Parse the name field back into first and last name
+      const nameParts = formData.name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
       await updateDoc(clientRef, {
-        ...formData,
+        clientFirstName: firstName,
+        clientLastName: lastName,
+        clientEmail: formData.email,
+        clientCellPhone: formData.phone,
+        clientAddress: formData.address,
+        clientCity: formData.city,
+        clientState: formData.state,
+        clientZipCode: formData.zipCode,
+        status: formData.status,
+        notes: formData.notes,
+        preferredContactMethod: formData.preferredContactMethod,
+        dateOfBirth: formData.dateOfBirth,
+        occupation: formData.occupation,
+        company: formData.company,
         updatedAt: new Date(),
       });
 
@@ -219,56 +238,58 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <>
-      <PageHeader
-        title={`Client: ${formData.name || 'Unnamed Client'}`}
-        description="View and edit client information."
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push('/clients')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Clients
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              disabled={!hasChanges || isSaving}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <PageHeader
+            title={`Client: ${formData.name || 'Unnamed Client'}`}
+            description="View and edit client information."
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push('/clients')} className="rounded-full border-2 border-gray-200 hover:border-blue-400 transition-all duration-200">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Clients
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={!hasChanges || isSaving}
+            className="rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold uppercase hover:scale-105 transition-all duration-200"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="rounded-full bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold uppercase hover:scale-105 transition-all duration-200">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Client
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the client
+                  "{formData.name}" and all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
                   Delete Client
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the client
-                    "{formData.name}" and all associated data.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                    Delete Client
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        }
-      />
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Basic Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center font-extrabold text-slate-900 tracking-tight">
               <User className="mr-2 h-5 w-5" />
               Basic Information
             </CardTitle>
@@ -342,8 +363,8 @@ export default function ClientDetailPage() {
 
         {/* Address Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center font-extrabold text-slate-900 tracking-tight">
               <MapPin className="mr-2 h-5 w-5" />
               Address Information
             </CardTitle>
@@ -397,8 +418,8 @@ export default function ClientDetailPage() {
 
         {/* Additional Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center font-extrabold text-slate-900 tracking-tight">
               <FileText className="mr-2 h-5 w-5" />
               Additional Information
             </CardTitle>
@@ -441,8 +462,8 @@ export default function ClientDetailPage() {
 
         {/* Notes */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+          <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+            <CardTitle className="flex items-center font-extrabold text-slate-900 tracking-tight">
               <FileText className="mr-2 h-5 w-5" />
               Notes
             </CardTitle>
@@ -467,8 +488,8 @@ export default function ClientDetailPage() {
 
       {/* Client Metadata */}
       <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
+        <CardHeader className="bg-gradient-to-r from-blue-100 to-green-100">
+          <CardTitle className="flex items-center font-extrabold text-slate-900 tracking-tight">
             <Calendar className="mr-2 h-5 w-5" />
             Client History
           </CardTitle>
@@ -484,6 +505,6 @@ export default function ClientDetailPage() {
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
