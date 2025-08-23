@@ -460,16 +460,17 @@ export default function DashboardPage() {
                   <TableHead className="text-xs sm:text-sm">Quality</TableHead>
                   <TableHead className="text-xs sm:text-sm">Next Step</TableHead>
                   <TableHead className="text-xs sm:text-sm">Created Date</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Call Transcript</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center h-24">Loading...</TableCell>
+                    <TableCell colSpan={12} className="text-center h-24">Loading...</TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center h-24">
+                    <TableCell colSpan={12} className="text-center h-24">
                       No leads found. Start making calls to see leads here!
                     </TableCell>
                   </TableRow>
@@ -505,6 +506,15 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell>{lead.nextStep || 'N/A'}</TableCell>
                       <TableCell>{lead.createdAt ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</TableCell>
+                      <TableCell className="max-w-2xl w-[30rem]">
+                        {lead.rawTranscript ? (
+                          <div className="text-xs text-gray-600 whitespace-pre-wrap break-words leading-relaxed max-h-32 overflow-y-auto">
+                            {lead.rawTranscript}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">No transcript</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
