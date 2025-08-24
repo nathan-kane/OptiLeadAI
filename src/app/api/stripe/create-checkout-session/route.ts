@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
       },
       gold: {
         priceId: process.env.STRIPE_GOLD_PRICE_ID,
-        amount: 199900, // $1999.00 in cents
-        name: 'OptiLeadAI Gold Plan',
+        amount: 99900, // $999.00 in cents
+        name: 'OptiLeadAI Pro Plan',
         description: 'Everything in Basic plus AI agent script enhancements, RAG knowledge base, and followup call recording/analysis'
       }
     };

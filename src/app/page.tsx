@@ -131,8 +131,8 @@ export default function LandingPage() {
                 planType="basic"
               />
               <PricingCard
-                title="Pro"
-                price="$300"
+                title="Gold"
+                price="$999"
                 subtitle="For growing sales teams"
                 features={["Up to 3,000 AI calls/month", "Advanced CRM with tasks", "Customizable call scripts", "Priority support"]}
                 planType="gold"
