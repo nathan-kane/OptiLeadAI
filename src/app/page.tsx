@@ -125,7 +125,7 @@ export default function LandingPage() {
             <div className="flex flex-col lg:flex-row justify-center gap-8 max-w-5xl mx-auto">
               <PricingCard
                 title="Basic"
-                price="$150"
+                price="$199"
                 subtitle="Perfect for solo agents and small teams"
                 features={["Up to 1,000 AI calls/month", "Built-in CRM & pipeline", "Transcripts & call notes", "Email support"]}
                 planType="basic"
