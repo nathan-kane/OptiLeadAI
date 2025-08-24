@@ -143,6 +143,18 @@ export function SidebarNav() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarSeparator />
+      
+      {/* Legal Links */}
+      <div className="px-3 py-2 space-y-1">
+        <Link href={`/terms?return=${encodeURIComponent(pathname)}`} className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
+          Terms & Conditions
+        </Link>
+        <Link href={`/privacy?return=${encodeURIComponent(pathname)}`} className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
+          Privacy Policy
+        </Link>
+      </div>
+      
+      <SidebarSeparator />
       <SidebarFooter>
         {currentUser && userProfile ? (
           <div className="flex items-center gap-3 p-2 group-data-[state=collapsed]:justify-center">

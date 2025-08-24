@@ -147,8 +147,8 @@ export default function LandingPage() {
         <div className="container mx-auto flex flex-col gap-2 sm:flex-row items-center">
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} OptiLead. All rights reserved.</p>
           <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-            <Link href="#" className="text-xs hover:underline text-gray-500">Terms of Service</Link>
-            <Link href="#" className="text-xs hover:underline text-gray-500">Privacy</Link>
+            <Link href="/terms" className="text-xs hover:underline text-gray-500">Terms & Conditions</Link>
+            <Link href="/privacy" className="text-xs hover:underline text-gray-500">Privacy</Link>
           </nav>
         </div>
       </footer>

@@ -193,6 +193,16 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </div>
+            <div className="text-center text-xs text-muted-foreground">
+              By logging in, you agree to our{" "}
+              <Link href="/terms?return=/login" className="underline text-primary">
+                Terms & Conditions
+              </Link>
+              {" "}and{" "}
+              <Link href="/privacy?return=/login" className="underline text-primary">
+                Privacy Policy
+              </Link>
+            </div>
           </CardFooter>
         </form>
       </Card>
