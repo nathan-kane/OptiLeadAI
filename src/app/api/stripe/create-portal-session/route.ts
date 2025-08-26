@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -29,13 +29,52 @@ export async function POST(request: NextRequest) {
     }
 
     const userData = userDoc.data();
-    const customerId = userData.stripeCustomerId;
+    let customerId = userData.stripeCustomerId;
 
+    // If no customer ID but we have a session ID, try to get customer from session
+    if (!customerId && userData.subscription?.stripeSessionId) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(userData.subscription.stripeSessionId);
+        customerId = session.customer as string;
+        
+        // Update user document with customer ID for future use
+        if (customerId) {
+          await updateDoc(userDocRef, {
+            stripeCustomerId: customerId
+          });
+        }
+      } catch (error) {
+        console.error('Error retrieving session:', error);
+      }
+    }
+
+    // If still no customer ID, create a new Stripe customer
     if (!customerId) {
-      return NextResponse.json(
-        { error: 'No Stripe customer found for this user' },
-        { status: 400 }
-      );
+      try {
+        const customer = await stripe.customers.create({
+          email: userData.email || undefined,
+          metadata: {
+            userId: userId,
+            firebaseUid: userId
+          },
+          name: userData.name || undefined,
+        });
+        
+        customerId = customer.id;
+        
+        // Save the new customer ID to Firestore
+        await updateDoc(userDocRef, {
+          stripeCustomerId: customerId
+        });
+        
+        console.log(`Created new Stripe customer ${customerId} for user ${userId}`);
+      } catch (error) {
+        console.error('Error creating Stripe customer:', error);
+        return NextResponse.json(
+          { error: 'Unable to create billing account. Please try again or contact support.' },
+          { status: 500 }
+        );
+      }
     }
 
     // Get the origin for redirect URL - production ready

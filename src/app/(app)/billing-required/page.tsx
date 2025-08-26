@@ -11,10 +11,22 @@ import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
 
 export default function BillingRequiredPage() {
-  const { subscriptionStatus, planType, user } = useAuth();
+  const { subscriptionStatus, planType, user, loading, subscriptionLoading } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const status = searchParams.get('status') || subscriptionStatus;
+
+  // Show loading while auth is initializing
+  if (loading || subscriptionLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading billing information...</p>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusInfo = (status: string | null) => {
     switch (status) {
@@ -77,16 +89,23 @@ export default function BillingRequiredPage() {
           'Content-Type': 'application/json',
           'X-User-ID': user?.uid || '',
         },
+        body: JSON.stringify({ userId: user?.uid }),
       });
 
       if (response.ok) {
         const { url } = await response.json();
         window.location.href = url;
       } else {
-        console.error('Failed to create portal session');
+        const errorData = await response.json();
+        console.error('Failed to create portal session:', errorData);
+        // Show error message and fallback options
+        alert('Unable to access billing portal. Please choose a new plan or contact support.');
+        router.push('/#pricing');
       }
     } catch (error) {
       console.error('Error creating portal session:', error);
+      // Fallback to pricing page
+      router.push('/#pricing');
     }
   };
 
@@ -176,24 +195,53 @@ export default function BillingRequiredPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Show manage billing button for users with existing plans/subscriptions */}
             {(status === 'past_due' || status === 'unpaid' || planType) && (
-              <Button 
-                onClick={handleManageBilling}
-                className="w-full"
-                size="lg"
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                {statusInfo.action}
-              </Button>
+              <>
+                <Button 
+                  onClick={handleManageBilling}
+                  className="w-full mb-2"
+                  size="lg"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {statusInfo.action}
+                </Button>
+                <Button asChild variant="outline" className="w-full" size="lg">
+                  <Link href="/#pricing">
+                    Choose New Plan
+                  </Link>
+                </Button>
+              </>
             )}
             
-            {!planType && (
+            {/* Show choose plan button for users with no plan or subscription */}
+            {(!planType && !status) || status === null && (
               <Button asChild className="w-full" size="lg">
                 <Link href="/#pricing">
                   <CreditCard className="w-4 h-4 mr-2" />
                   {statusInfo.action}
                 </Link>
               </Button>
+            )}
+
+            {/* Show choose plan button for users with incomplete status */}
+            {status === 'incomplete' && (
+              <>
+                <Button asChild className="w-full mb-2" size="lg">
+                  <Link href="/#pricing">
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    {statusInfo.action}
+                  </Link>
+                </Button>
+                <Button 
+                  onClick={handleManageBilling}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
+                  Access Billing Portal
+                </Button>
+              </>
             )}
 
             <div className="text-center pt-4 border-t">

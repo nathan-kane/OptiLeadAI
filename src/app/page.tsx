@@ -85,7 +85,7 @@ export default function LandingPage() {
               <div className="p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-6 mx-auto">2</div>
                 <h3 className="text-xl font-bold mb-4 text-slate-900">AI Makes the Calls</h3>
-                <p className="text-slate-600 text-base leading-relaxed">Our AI engages prospects naturally using ElevenLabs human-like voices.</p>
+                <p className="text-slate-600 text-base leading-relaxed">Our AI engages prospects naturally using human-like voices.</p>
               </div>
               <div className="p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-6 mx-auto">3</div>
