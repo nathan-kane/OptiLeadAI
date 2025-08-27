@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { db } from '@/lib/firebase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -25,6 +25,9 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [promptName, setPromptName] = useState<string>("");
   const [promptText, setPromptText] = useState<string>("");
+  const [originalPromptName, setOriginalPromptName] = useState<string>("");
+  const [originalPromptText, setOriginalPromptText] = useState<string>("");
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -61,12 +64,18 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
     const id = e.target.value;
     setSelectedPromptId(id);
     const found = prompts.find(p => p.id === id);
-    setPromptName(found ? found.title : "");
+    const title = found ? found.title : "";
     // Handle backward compatibility: check for both 'prompt' (new) and 'content' (old) fields
     const promptContent = found ? (found.prompt || (found as any).content || "") : "";
+    
+    setPromptName(title);
     setPromptText(promptContent);
+    setOriginalPromptName(title);
+    setOriginalPromptText(promptContent);
+    setIsCreatingNew(false);
     setSuccess(null);
     setError(null);
+    
     if (onPromptSelected) {
       onPromptSelected(found || null);
     }
@@ -81,25 +90,59 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
     setLoading(true);
     setError(null);
     setSuccess(null);
+    
     try {
-      const promptData = {
-        title: promptName,
-        prompt: promptText,
-        description: "", // Optional field, can be empty for now
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        isDefault: false, // Optional field, default to false
-        tags: [] // Optional field, empty array for now
-      };
+      if (isCreatingNew || !selectedPromptId) {
+        // Create new prompt
+        const promptData = {
+          title: promptName,
+          prompt: promptText,
+          description: "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isDefault: false,
+          tags: []
+        };
+        
+        const docRef = await addDoc(collection(db, 'users', userId, 'prompts'), promptData);
+        console.log('New prompt created for user:', userId, 'Document ID:', docRef.id);
+        setSuccess("New prompt created successfully!");
+        
+        // Select the newly created prompt
+        setSelectedPromptId(docRef.id);
+        setOriginalPromptName(promptName);
+        setOriginalPromptText(promptText);
+        setIsCreatingNew(false);
+      } else {
+        // Update existing prompt
+        const promptRef = doc(db, 'users', userId, 'prompts', selectedPromptId);
+        const updateData = {
+          title: promptName,
+          prompt: promptText,
+          updatedAt: serverTimestamp()
+        };
+        
+        await updateDoc(promptRef, updateData);
+        console.log('Prompt updated for user:', userId, 'Document ID:', selectedPromptId);
+        setSuccess("Prompt updated successfully!");
+        
+        // Update original values to reflect the save
+        setOriginalPromptName(promptName);
+        setOriginalPromptText(promptText);
+        
+        // Update the selected prompt in parent component
+        if (onPromptSelected) {
+          const updatedPrompt = {
+            id: selectedPromptId,
+            title: promptName,
+            prompt: promptText,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          onPromptSelected(updatedPrompt);
+        }
+      }
       
-      // Save to user-scoped collection: users/{userId}/prompts
-      const docRef = await addDoc(collection(db, 'users', userId, 'prompts'), promptData);
-      console.log('Prompt saved successfully for user:', userId, 'Document ID:', docRef.id);
-      
-      setPromptName("");
-      setPromptText("");
-      setSelectedPromptId("");
-      setSuccess("Prompt saved successfully!");
       await fetchPrompts();
     } catch (err) {
       setError("Failed to save prompt");
@@ -108,17 +151,37 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
       setLoading(false);
     }
   }
+  
+  function handleNewPrompt() {
+    setSelectedPromptId("");
+    setPromptName("");
+    setPromptText("");
+    setOriginalPromptName("");
+    setOriginalPromptText("");
+    setIsCreatingNew(true);
+    setSuccess(null);
+    setError(null);
+    
+    if (onPromptSelected) {
+      onPromptSelected(null);
+    }
+  }
+  
+  // Check if current prompt has changes
+  const hasChanges = () => {
+    return promptName !== originalPromptName || promptText !== originalPromptText;
+  };
 
   return (
     <div style={{ marginBottom: 32, border: '1px solid #ddd', borderRadius: 8, padding: 16 }}>
       <h1><b>Prompts</b></h1>
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: '10px' }}>
         <label htmlFor="promptDropdown"></label>
         <select
           id="promptDropdown"
           value={selectedPromptId}
           onChange={handleSelectPrompt}
-          style={{ marginLeft: 10, minWidth: 200 }}
+          style={{ minWidth: 200 }}
         >
           <option value="">-- Select a prompt --</option>
           {prompts.map(p => (
@@ -127,6 +190,19 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
             </option>
           ))}
         </select>
+        <button
+          onClick={handleNewPrompt}
+          style={{ 
+            padding: '8px 16px', 
+            background: '#0066cc', 
+            color: '#fff', 
+            border: 'none', 
+            borderRadius: 4,
+            cursor: 'pointer'
+          }}
+        >
+          New Prompt
+        </button>
       </div>
       <div style={{ marginBottom: 12 }}>
         <label htmlFor="systemPromptName"><b>Prompt Name:</b></label>
@@ -168,10 +244,17 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
           }
           await handleSavePrompt();
         }}
-        disabled={loading || !promptName?.trim() || !promptText?.trim()}
-        style={{ padding: '8px 16px', background: '#1c7c54', color: '#fff', border: 'none', borderRadius: 4 }}
+        disabled={loading || !promptName?.trim() || !promptText?.trim() || (!isCreatingNew && !hasChanges())}
+        style={{ 
+          padding: '8px 16px', 
+          background: (loading || !promptName?.trim() || !promptText?.trim() || (!isCreatingNew && !hasChanges())) ? '#ccc' : '#1c7c54', 
+          color: '#fff', 
+          border: 'none', 
+          borderRadius: 4,
+          cursor: (loading || !promptName?.trim() || !promptText?.trim() || (!isCreatingNew && !hasChanges())) ? 'not-allowed' : 'pointer'
+        }}
       >
-        {loading ? 'Saving...' : 'Save Prompt'}
+        {loading ? 'Saving...' : (isCreatingNew ? 'Create Prompt' : 'Update Prompt')}
       </button>
       {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
       {success && <div style={{ color: 'green', marginTop: 10 }}>{success}</div>}

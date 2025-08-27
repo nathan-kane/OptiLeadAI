@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
+import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 
 type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | null;
 type PlanType = 'basic' | 'gold' | null;
@@ -48,6 +49,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   // Computed subscription status
   const hasActiveSubscription = subscriptionStatus === 'active';
+
+  // Initialize inactivity timer - only active when user is logged in
+  useInactivityTimer({
+    timeout: 2 * 60 * 60 * 1000, // 2 hours
+    enabled: !!userId, // Only enable when user is logged in
+    onTimeout: () => {
+      console.log('User session expired due to inactivity');
+    }
+  });
 
   // Load userId from localStorage on mount
   useEffect(() => {
