@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";;
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/icons/logo";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase/client"; // Assuming auth is exported from utils.ts
@@ -21,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 function SignupContent() {
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -117,6 +119,11 @@ function SignupContent() {
               return;
             }
 
+            if (!acceptedTerms) {
+              setErrorMessage("You must accept the Terms & Conditions and Privacy Policy to continue.");
+              return;
+            }
+
             try {
               const userCredential = await createUserWithEmailAndPassword(auth, email, password);
               
@@ -129,6 +136,14 @@ function SignupContent() {
                   status: null,
                   planType: null,
                   selectedPlan: selectedPlan || null // Store the plan they selected during signup
+                },
+                legal: {
+                  termsAccepted: true,
+                  termsAcceptedAt: serverTimestamp(),
+                  privacyPolicyAccepted: true,
+                  privacyPolicyAcceptedAt: serverTimestamp(),
+                  ipAddress: null, // Could be populated server-side for audit trail
+                  userAgent: navigator.userAgent
                 }
               });
               
@@ -169,6 +184,40 @@ function SignupContent() {
             <Label htmlFor="confirmPassword">Confirm Password</Label>
             <Input id="confirmPassword" type="password" required minLength={6}/>
           </div>
+          
+          {/* Terms and Conditions Checkbox */}
+          <div className="flex items-start space-x-3 pt-4">
+            <Checkbox 
+              id="terms" 
+              checked={acceptedTerms}
+              onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+              className="mt-1"
+            />
+            <div className="grid gap-1.5 leading-none">
+              <Label 
+                htmlFor="terms"
+                className="text-sm font-normal leading-relaxed cursor-pointer"
+              >
+                By checking this box, I confirm that I have read and agree to the{" "}
+                <Link 
+                  href="/terms" 
+                  target="_blank" 
+                  className="text-primary underline hover:no-underline"
+                >
+                  Terms & Conditions
+                </Link>
+                {" "}and{" "}
+                <Link 
+                  href="/privacy" 
+                  target="_blank" 
+                  className="text-primary underline hover:no-underline"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </Label>
+            </div>
+          </div>
           {successMessage && (
             <div className="text-green-600 text-center mt-4 text-sm">
               {successMessage}
@@ -180,7 +229,7 @@ function SignupContent() {
             </div>
           )}
           <CardFooter className="flex flex-col gap-4 pt-6">
-             <Button type="submit" className="w-full">
+             <Button type="submit" className="w-full" disabled={!acceptedTerms}>
               Sign Up
              </Button>
            </CardFooter>
