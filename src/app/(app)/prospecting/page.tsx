@@ -41,6 +41,32 @@ export default function ProspectingPage() {
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Phone number normalization function
+  const normalizePhoneNumber = (phone: string): string | null => {
+    // Remove all non-digit characters
+    const digits = phone.replace(/\D/g, '');
+    
+    // Handle different formats
+    if (digits.length === 10) {
+      // US number without country code: 1234567890 -> +11234567890
+      return `+1${digits}`;
+    } else if (digits.length === 11 && digits.startsWith('1')) {
+      // US number with country code: 11234567890 -> +11234567890
+      return `+${digits}`;
+    } else if (digits.length === 11 && !digits.startsWith('1')) {
+      // Invalid 11-digit number, try treating as 10-digit
+      return `+1${digits.slice(1)}`;
+    } else if (digits.length > 11) {
+      // International number, keep as is with + prefix
+      return `+${digits}`;
+    } else if (digits.length < 10) {
+      // Too short, invalid
+      return null;
+    }
+    
+    return null;
+  };
+
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCsvError(null);
     setLeads([]);
@@ -131,8 +157,11 @@ export default function ProspectingPage() {
           const lowerKey = key.toLowerCase();
           if (lowerKey.includes('phone') || lowerKey.includes('mobile')) {
             const phoneValue = String(row[key] || '').trim();
-            if (phoneValue && !phoneNumbers.includes(phoneValue)) {
-              phoneNumbers.push(phoneValue);
+            if (phoneValue) {
+              const normalizedPhone = normalizePhoneNumber(phoneValue);
+              if (normalizedPhone && !phoneNumbers.includes(normalizedPhone)) {
+                phoneNumbers.push(normalizedPhone);
+              }
             }
           }
         });
@@ -147,6 +176,9 @@ export default function ProspectingPage() {
       }).filter((lead: any) => {
         // Filter out rows without Full Name or phone numbers
         if (!lead.fullName || lead.phoneNumbers.length === 0) return false;
+        
+        // Filter out rows with name "No Name"
+        if (lead.fullName.toLowerCase().trim() === 'no name') return false;
         
         // Filter out rows with Listing Status of "Withdrawn" or "Contract"
         const status = String(lead.listingStatus).toLowerCase().trim();
