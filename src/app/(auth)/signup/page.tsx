@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { sendEmailVerification } from "firebase/auth";
 import { Badge } from "@/components/ui/badge";
+import { SafariErrorBoundary } from "@/components/SafariErrorBoundary";
 
 function SignupContent() {
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
@@ -82,7 +83,8 @@ function SignupContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <SafariErrorBoundary>
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
            <div className="mx-auto mb-4">
@@ -249,6 +251,7 @@ function SignupContent() {
         </CardFooter>
       </Card>
     </div>
+    </SafariErrorBoundary>
   );
 }
 

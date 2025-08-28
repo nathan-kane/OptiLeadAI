@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { SafariErrorBoundary } from "@/components/SafariErrorBoundary";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -138,7 +139,8 @@ export default function LoginPage() {
   }
   console.log("LoginPage: Rendering login form. isAuthCheckLoading:", isAuthCheckLoading, "isSubmitting:", isSubmitting, "errorMessage:", errorMessage);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <SafariErrorBoundary>
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4">
@@ -207,5 +209,6 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
+    </SafariErrorBoundary>
   );
 }
