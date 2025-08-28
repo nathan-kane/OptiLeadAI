@@ -31,7 +31,6 @@ function SignupContent() {
 
   // Get plan from URL parameters
   const selectedPlan = searchParams.get('plan');
-  const redirectToCheckout = searchParams.get('redirect') === 'checkout';
 
   const planDetails = {
     basic: { name: 'Basic Plan', price: '$199/month', color: 'bg-blue-500' },
@@ -41,44 +40,54 @@ function SignupContent() {
   const currentPlan = selectedPlan && planDetails[selectedPlan as keyof typeof planDetails];
 
   const handleSuccessfulSignup = async (userCredential: any) => {
-    if (redirectToCheckout && selectedPlan) {
-      // Immediately redirect to Stripe checkout after successful signup
-      try {
-        const response = await fetch('/api/stripe/create-checkout-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-User-ID': userCredential.user.uid,
-          },
-          body: JSON.stringify({
-            planType: selectedPlan,
-            userId: userCredential.user.uid,
-            userEmail: userCredential.user.email,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create checkout session');
-        }
-
-        const { url } = await response.json();
+    // Show success message first
+    setSuccessMessage('Account created successfully!');
+    
+    // Check if user came from plan selection
+    if (selectedPlan) {
+      // Show plan-specific success message and redirect to checkout
+      setTimeout(async () => {
+        setSuccessMessage('Redirecting to secure checkout...');
         
-        if (url) {
-          // Redirect directly to Stripe Checkout
-          window.location.href = url;
-        } else {
-          throw new Error('No checkout URL received');
+        try {
+          const response = await fetch('/api/stripe/create-checkout-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-ID': userCredential.user.uid,
+            },
+            body: JSON.stringify({
+              planType: selectedPlan,
+              userId: userCredential.user.uid,
+              userEmail: userCredential.user.email,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create checkout session');
+          }
+
+          const { url } = await response.json();
+          
+          if (url) {
+            // Redirect to Stripe Checkout with user account already created
+            window.location.href = url;
+          } else {
+            throw new Error('No checkout URL received');
+          }
+        } catch (error) {
+          console.error('Checkout error after signup:', error);
+          setErrorMessage('Account created successfully, but failed to start checkout. Please try selecting a plan from the dashboard.');
+          // Fallback: redirect to dashboard
+          setTimeout(() => router.push('/dashboard'), 2000);
         }
-      } catch (error) {
-        console.error('Checkout error after signup:', error);
-        setErrorMessage('Account created successfully, but failed to start checkout. Please try selecting a plan from the dashboard.');
-        // Fallback: redirect to dashboard
-        setTimeout(() => router.push('/dashboard'), 2000);
-      }
+      }, 2000); // 2 second delay to show success message
     } else {
-      // Regular signup flow - show success message
-      setSuccessMessage('Registration successful! Please check your email for a verification link.');
+      // Regular signup flow - show email verification message
+      setTimeout(() => {
+        setSuccessMessage('Registration successful! Please check your email for a verification link.');
+      }, 1000);
     }
   };
 

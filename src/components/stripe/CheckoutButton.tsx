@@ -28,55 +28,13 @@ export function CheckoutButton({
   const { toast } = useToast();
 
   const handleCheckout = async () => {
-    if (!user || !userId) {
-      // Store the selected plan in localStorage for after signup
-      localStorage.setItem('selectedPlan', planType);
-      localStorage.setItem('redirectAfterAuth', 'checkout');
-      
-      // Redirect to signup page with plan context
-      window.location.href = `/signup?plan=${planType}&redirect=checkout`;
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-ID': userId,
-        },
-        body: JSON.stringify({
-          planType,
-          userId,
-          userEmail: user.email,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
-      }
-
-      const { url } = await response.json();
-      
-      if (url) {
-        // Redirect to Stripe Checkout
-        window.location.href = url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      toast({
-        title: "Checkout Error",
-        description: error instanceof Error ? error.message : "Failed to start checkout process. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    // For plan selection from landing page, always go to signup first
+    // This ensures proper flow: Plan Selection → Registration → Stripe
+    localStorage.setItem('selectedPlan', planType);
+    localStorage.setItem('redirectAfterAuth', 'checkout');
+    
+    // Always redirect to signup page with plan context
+    window.location.href = `/signup?plan=${planType}`;
   };
 
   return (
