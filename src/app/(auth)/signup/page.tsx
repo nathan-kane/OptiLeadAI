@@ -13,6 +13,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase/client"; // Assuming auth is exported from utils.ts
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { DEFAULT_PROMPT_CONFIG } from "@/config/default-prompt";
+import { TERMS_CONFIG } from "@/config/terms-version";
+import { PRIVACY_CONFIG } from "@/config/privacy-version";
 import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -140,8 +142,10 @@ function SignupContent() {
                 legal: {
                   termsAccepted: true,
                   termsAcceptedAt: serverTimestamp(),
+                  termsVersion: TERMS_CONFIG.version,
                   privacyPolicyAccepted: true,
                   privacyPolicyAcceptedAt: serverTimestamp(),
+                  privacyPolicyVersion: PRIVACY_CONFIG.version,
                   ipAddress: null, // Could be populated server-side for audit trail
                   userAgent: navigator.userAgent
                 }

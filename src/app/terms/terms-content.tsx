@@ -20,7 +20,7 @@ function TermsAndConditionsContent() {
             </Button>
           </Link>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Terms and Conditions</h1>
-          <p className="text-slate-600">Effective Date: 8/25/2025</p>
+          <p className="text-slate-600">Version 1.0 | Effective Date: 8/25/2025</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8 space-y-8">
