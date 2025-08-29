@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, CreditCard } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface CheckoutButtonProps {
   planType: 'basic' | 'gold';
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   size?: 'sm' | 'lg' | 'default';
   variant?: 'default' | 'outline' | 'secondary' | 'destructive' | 'ghost' | 'link';

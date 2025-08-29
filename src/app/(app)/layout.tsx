@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
@@ -12,11 +11,12 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainHeader } from '@/components/layout/main-header';
 import { Logo } from '@/components/icons/logo';
 import { getUserProfile } from '@/lib/get-profile-name';
+import { FloatingHelpButton } from '@/components/ui/floating-help-button';
 
 export default function AppLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -112,6 +112,7 @@ export default function AppLayout({
             <main className="flex-1 p-6 md:p-8 lg:p-10">
               {children}
             </main>
+            <FloatingHelpButton />
           </div>
         </div>
       </SidebarProvider>

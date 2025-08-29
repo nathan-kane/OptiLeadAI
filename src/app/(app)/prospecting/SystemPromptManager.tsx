@@ -190,7 +190,7 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
             </option>
           ))}
         </select>
-        <button
+        {/* <button
           onClick={handleNewPrompt}
           style={{ 
             padding: '8px 16px', 
@@ -202,7 +202,7 @@ export default function SystemPromptManager({ onPromptSelected }: SystemPromptMa
           }}
         >
           New Prompt
-        </button>
+        </button> */}
       </div>
       <div style={{ marginBottom: 12 }}>
         <label htmlFor="systemPromptName"><b>Prompt Name:</b></label>
